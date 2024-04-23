@@ -21,7 +21,7 @@ Ran by the user who wishes to start a server. Senders file content will be updat
 
 ##### Request
 
-```json
+```
 export type StartServerEvent {
     /**
      *  Name of the event being emitted.
@@ -59,7 +59,7 @@ export type StartServerEvent {
 
 ##### Response
 
-```json
+```
 export type StartServerResponse {
     /**
      *  Address the server is running on.
@@ -93,7 +93,7 @@ Ran by the user who wishes to connect to a running server. The callers files wil
 
 ##### Request
 
-```json
+```
 export type ConnectServerEvent {
     /**
      *  Name of the event being emitted.
@@ -117,7 +117,7 @@ export type ConnectServerEvent {
 
 ##### Response
 
-```json
+```
 export type ConnectServerResponse {
 
 }
@@ -129,7 +129,7 @@ export type ConnectServerResponse {
 
 Capabilities are features that the server can implement. They are defined by the server and can be used by the client.
 
-```json
+```
 export type ServerCapabilities {
     /**
      *  Should the server allow multiple users to edit the same file at the same time.
