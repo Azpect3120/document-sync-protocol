@@ -19,7 +19,7 @@
 
 Ran by the user who wishes to start a server. Senders file content will be updated by the connected users, assuming the server implements such capabilities.
 
-##### Request
+##### Event
 
 ```typescript
 interface StartServerEvent {
@@ -91,7 +91,7 @@ interface StartServerResponse {
 
 Ran by the user who wishes to connect to a running server. The callers files will remain unchanged until the connection is aborted.
 
-##### Request
+##### Event
 
 ```typescript
 interface ConnectServerEvent {
