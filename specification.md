@@ -22,7 +22,7 @@ Ran by the user who wishes to start a server. Senders file content will be updat
 ##### Request
 
 ```typescript
-export type StartServerEvent {
+interface StartServerEvent {
     /**
      *  Name of the event being emitted.
      *  Event properties are unique and found in all events.
@@ -60,7 +60,7 @@ export type StartServerEvent {
 ##### Response
 
 ```typescript
-export type StartServerResponse {
+interface StartServerResponse {
     /**
      *  Address the server is running on.
      *  Port should be provided as well.
@@ -94,7 +94,7 @@ Ran by the user who wishes to connect to a running server. The callers files wil
 ##### Request
 
 ```typescript
-export type ConnectServerEvent {
+interface ConnectServerEvent {
     /**
      *  Name of the event being emitted.
      *  Event properties are unique and found in all events.
@@ -118,7 +118,7 @@ export type ConnectServerEvent {
 ##### Response
 
 ```typescript
-export type ConnectServerResponse {
+interface ConnectServerResponse {
 
 }
 ```
@@ -130,7 +130,7 @@ export type ConnectServerResponse {
 Capabilities are features that the server can implement. They are defined by the server and can be used by the client.
 
 ```typescript
-export type ServerCapabilities {
+interface ServerCapabilities {
     /**
      *  Should the server allow multiple users to edit the same file at the same time.
      *  When false, clients will be put into a read-only mode.
