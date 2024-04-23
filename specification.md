@@ -54,6 +54,11 @@ interface StartServerEvent {
      */
     password?: string;
 
+    /**
+     *  Time in milliseconds before syncing the document.
+     *  If not provided, the server will sync the document every 1000ms.
+     */
+    timeout?: integer;
 }
 ```
 
@@ -112,6 +117,14 @@ interface ConnectServerEvent {
      *  An ID will be returned in the response which the server will map to this identifier.
      */
     identifier: string;
+
+    /**
+     *  Password required to connect to the server.
+     *  If no password is required, this should be ommmitted.
+     *
+     *  !NOTE: Should this be null or optional? 
+     */
+    password?: string;
 }
 ```
 
