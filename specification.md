@@ -32,12 +32,14 @@ interface StartServerEvent {
     /**
      *  Address to start the server on.
      *  Port should be provided as well.
+     *  If not provided, the server will start on the default port: 3270
      */
     host: string;
 
     /**
-     *  List of capbilities the server will implement.
-     *  If not provided, the server will not have any capbilities.
+     *  Define the capbilities the server will implement.
+     *  If empty, the server will not implement any capabilities.
+     *  If not provided, the server will fail to start.
      */
     capabilities: ServerCapabilities;
 
@@ -73,22 +75,15 @@ interface StartServerResponse {
     host: string;
 
     /**
-     *  Status of the connection.
+     *  Status of the server.
      */
     success: boolean;
 
     /**
      *  Error returned if success is false.
-     *  If connection is successful, this will be null.
+     *  If server is started successfully, this will be null.
      */
     error: string | null;
-
-    /**
-     *  ID provided for the identifier provided in the request.
-     *  This ID will be used to map the connection to the user.
-     *  If connection is unsuccessful, this will be null.
-     */
-    id: string | null;
 }
 ```
 
@@ -109,6 +104,7 @@ interface ConnectServerEvent {
     /**
      *  Address to attempt to connect to.
      *  Port should be provided as well.
+     *  The default port for servers is 3270, but can be configured by the server.
      */
     host: string;
 
@@ -122,7 +118,7 @@ interface ConnectServerEvent {
      *  Password required to connect to the server.
      *  If no password is required, this should be ommmitted.
      *
-     *  !NOTE: Should this be null or optional? 
+     *  !!! Should this be null or optional? 
      */
     password?: string;
 }
@@ -132,7 +128,30 @@ interface ConnectServerEvent {
 
 ```typescript
 interface ConnectServerResponse {
+    /**
+     *  Status of the connection attempt.
+     */
+    success: boolean;
 
+    /**
+     *  Error returned if success is false.
+     *  If connection is successful, this will be null.
+     */
+    error: string | null;
+
+    /**
+     *  ID provided for the identifier provided in the request.
+     *  This ID will be used to map the connection to the user.
+     *  If connection is unsuccessful, this will be null.
+     */
+    id: string | null;
+
+    /**
+     *  Capabilities the server has implemented.
+     *  The client is expected to also impliment these capabilities.
+     *  If connection fails, this will be null.
+     */
+    capabilities: ServerCapabilities | null;
 }
 ```
 
@@ -159,5 +178,10 @@ interface ServerCapabilities {
      *  Should the server display the cursor of the users in the document.
      */
     cursorSync: boolean;
+
+    /**
+     *  Should the server display the number of clients connected to the server.
+     */
+    clientCount: boolean;
 }
 ```
