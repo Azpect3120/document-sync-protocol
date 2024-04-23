@@ -10,7 +10,8 @@
 
 **How does it work?** 
 
-    Not sure yet :)
+    TCP server will be started by the server user and the clients will establish a TCP connection to the server.
+    When the connection is successful, the capabilities will be sent from the server and the client will implement the functionality.
 
 ## Events
 
@@ -37,7 +38,7 @@ interface StartServerEvent {
     host: string;
 
     /**
-     *  Define the capbilities the server will implement.
+     *  Define the capabilities the server will implement.
      *  If empty, the server will not implement any capabilities.
      *  If not provided, the server will fail to start.
      */
