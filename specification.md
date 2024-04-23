@@ -159,7 +159,7 @@ interface ConnectServerResponse {
 
 #### [Server Capabilities](#Server-Capabilities)
 
-Capabilities are features that the server can implement. They are defined by the server and can be used by the client.
+Capabilities are features that the server can implement. They are defined by the server and can be used by the client. The client must also implement the capabilities to allow for the proper use of the server capabilities. 
 
 ```typescript
 interface ServerCapabilities {
