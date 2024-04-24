@@ -86,7 +86,7 @@ func connectionWriteLoop(conn net.Conn, ch chan struct{}) {
 	}
 
 	// Print success to console
-	log.Printf("Sent welcome message(%d) to %s.\n", num, conn.RemoteAddr().String())
+	log.Printf("Sent welcome message(%d) to %s\n", num, conn.RemoteAddr().String())
 
 	for {
 		time.Sleep(time.Second)

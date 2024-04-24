@@ -38,7 +38,7 @@ func main() {
 			message, err := reader.ReadString('\n')
 			if err != nil {
 				log.Printf("Error reading data from connection: %s\n", err.Error())
-				break
+				return
 			}
 			log.Printf("[%s] %s", conn.RemoteAddr().String(), message)
 		}

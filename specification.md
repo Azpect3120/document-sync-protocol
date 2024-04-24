@@ -1,6 +1,6 @@
 # Specification 
 
-### Version 0.0.1
+### Version `0.0.1`
 
 <br>
 
@@ -11,16 +11,19 @@
 **How does it work?** 
 
     TCP server will be started by the server user and the clients will establish a TCP connection to the server.
-    When the connection is successful, the capabilities will be sent from the server and the client will implement the functionality.
+    When the connection is successful, the capabilities will be sent from the server and the client will implement the functionality to allow syncing between the server and connected clients.
+
+<br>
 
 ## Events
 
-
-#### [Start Server](#Start-Server)
+### [Start Server](#Start-Server)
 
 Ran by the user who wishes to start a server. Senders file content will be updated by the connected users, assuming the server implements such capabilities.
 
-##### Event
+NOTE: `Event` is not really the right word to describe what this action. `Function` may be a better word to describe how this works. The server must first run a function that implements the following interface which will start up the server, then events can begin.
+
+### Event
 
 ```typescript
 interface StartServerEvent {
@@ -65,7 +68,7 @@ interface StartServerEvent {
 }
 ```
 
-##### Response
+### Response
 
 ```typescript
 interface StartServerResponse {
@@ -88,11 +91,13 @@ interface StartServerResponse {
 }
 ```
 
-#### [Connect to Server](#Connect-to-Server)
+### [Connect to Server](#Connect-to-Server)
 
 Ran by the user who wishes to connect to a running server. The callers files will remain unchanged until the connection is aborted.
 
-##### Event
+NOTE: `Event` is not really the right word to describe what this action. `Function` may be a better word to describe how this works. The client must first run a function that implements the following interface which will connect to a running server and then the client may begin listening to events and sending back data.
+
+### Event
 
 ```typescript
 interface ConnectServerEvent {
@@ -105,13 +110,16 @@ interface ConnectServerEvent {
     /**
      *  Address to attempt to connect to.
      *  Port should be provided as well.
-     *  The default port for servers is 3270, but can be configured by the server.
+     *  The default port for servers is 3270, but can be configured by the
+     *  server.
      */
     host: string;
 
     /**
-     *  Similiar to a username which is provided to the server to identify the connection/user.
-     *  An ID will be returned in the response which the server will map to this identifier.
+     *  Similar to a username which is provided to the server to identify 
+     *  the connection/user.
+     *  An ID will be returned in the response which the server will map 
+     *  to this identifier.
      */
     identifier: string;
 
@@ -125,7 +133,7 @@ interface ConnectServerEvent {
 }
 ```
 
-##### Response
+### Response
 
 ```typescript
 interface ConnectServerResponse {
@@ -156,19 +164,106 @@ interface ConnectServerResponse {
 }
 ```
 
+### [Sync Document](#Sync-Document)
+
+Server event is emitted by the server which sends back the document to each client. Client event is emitted by the client to the server. The time between syncs on the client side is determined by the client's implementation. The time between the syncs on the server side is determined by the server when it is spawned.
+
+Client events can be emitted at any point but the server event will be emitted only when the timer has completed a full cycle. If the server sync timer is reduced the clients data will be updated quicker.
+
+#### **Server**
+
+### Event
+```typescript
+interface ServerSyncDocumentEvent {
+    /**
+     *  Name of the event being emitted.
+     *  Event properties are unique and found in all events.
+     */
+    event: string = "document/sync";
+
+    /**
+     *  Defines if the document provided a partial or an entire document.
+     *  If false, the clients entire document can be overwritten by the 
+     *  new data.
+     */ 
+    partial: boolean;
+
+    /**
+     *  Synced document data. 
+     *  Compression algorithms can be used but only if both the client and 
+     *  server support the implementation, which is defined in the server 
+     *  capabilities.
+     *  If a partial is provided the location property should be used by 
+     *  the client to determine the location to swap the data into.
+     */
+    content: string;
+
+    /**
+     *  Name of the document that is being synced.
+     *  When multi-file support is implemented this will be a bigger deal
+     *  but for the time being it is just used to ensure the right document
+     *  is being sent and received.
+     */
+    document: string;
+
+    /**
+     *  Still not entirely sure how this is going to work but this value 
+     *  will be used by the client to determine where to apply the partial 
+     *  document data.
+     *  If the data being sent is not in a partial format then this value
+     *  can be omitted. But if it is a partial, the and this value is 
+     *  omitted, the content will be ignored by the client until the next
+     *  successful sync. An error here will result in an unsuccessful sync.
+     */
+    location?: integer;
+
+    /**
+     *  Timestamp of this update.
+     *  Depending on the client implementation this can be used in the UI.
+     */
+    time: Date;
+}
+```
+No response is expected from the client to the server upon emitting this event.
+
+#### **Client**
+
+### Event
+```typescript
+interface ClientSyncDocumentEvent {
+    /**
+     *  Name of the event being emitted.
+     *  Event properties are unique and found in all events.
+     */
+    event: string = "client/sync_document";
+}
+```
+
+<br>
+
 ## Types
 
-#### [Server Capabilities](#Server-Capabilities)
+### [Server Capabilities](#Server-Capabilities)
 
 Capabilities are features that the server can implement. They are defined by the server and can be used by the client. The client must also implement the capabilities to allow for the proper use of the server capabilities. 
 
 ```typescript
 interface ServerCapabilities {
     /**
-     *  Should the server allow multiple users to edit the same file at the same time.
-     *  When false, clients will be put into a read-only mode.
+     *  Should the server allow multiple users to edit the same file at 
+     *  the same time.
+     *  Value provided determines the time between each sync event in
+     *  milliseconds.
+     *  When 0, clients will be put into a read-only mode.
      */
-    documentSync: boolean;
+    documentSync: integer;
+
+    /**
+     *  Should the server send and receive document data in a compressed
+     *  format.
+     *  If this value is omitted, compression will not be supported.
+     */
+    compression?: string = "LZMA" | "GZIP" | "DEFLATE" | "ZLIB";
 
     /**
      *  Should the server display the users identifier in the document.
@@ -177,11 +272,15 @@ interface ServerCapabilities {
 
     /**
      *  Should the server display the cursor of the users in the document.
+     *  Value provided determines the time between each sync event in
+     *  milliseconds.
+     *  When 0, server will not accept the clients cursor location.
      */
-    cursorSync: boolean;
+    cursorSync: integer;
 
     /**
-     *  Should the server display the number of clients connected to the server.
+     *  Should the server display the number of clients connected to 
+     *  the server.
      */
     clientCount: boolean;
 }
