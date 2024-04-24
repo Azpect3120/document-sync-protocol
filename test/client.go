@@ -1,11 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"context"
-	"fmt"
 	"log"
 	"net"
-	"os"
 	"time"
 )
 
@@ -24,16 +23,12 @@ func main() {
 
 	log.Printf("Connection made to %s from %s\n", conn.RemoteAddr().String(), conn.LocalAddr().String())
 
-	start := time.Now()
 	for {
-		time.Sleep(time.Second)
-
-		num, err := conn.Write([]byte(fmt.Sprintf("Client connection has been alive for %.0f seconds\n", time.Since(start).Seconds())))
+		message, err := bufio.NewReader(conn).ReadString('\n')
 		if err != nil {
-			log.Println("Connection to the server was disconnected")
-			os.Exit(0)
+			log.Printf("Error reading data from connection: %s\n", err.Error())
+			break
 		}
-
-		log.Printf("Wrote %d bytes to the server", num)
+		log.Printf("[%s] %s", conn.RemoteAddr().String(), message)
 	}
 }
