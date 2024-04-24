@@ -21,14 +21,50 @@ func main() {
 	defer conn.Close()
 	defer log.Printf("Connection to %s closed.\n", conn.RemoteAddr().String())
 
+	// Print connection details
 	log.Printf("Connection made to %s from %s\n", conn.RemoteAddr().String(), conn.LocalAddr().String())
 
+	// Start connection write loop in new thread
+	kill := make(chan struct{})
+	go connectionWriteLoop(conn, kill)
+
+	// Begin connection read loop
+	reader := bufio.NewReader(conn)
 	for {
-		message, err := bufio.NewReader(conn).ReadString('\n')
-		if err != nil {
-			log.Printf("Error reading data from connection: %s\n", err.Error())
-			break
+		select {
+		case <-kill:
+			return
+		default:
+			message, err := reader.ReadString('\n')
+			if err != nil {
+				log.Printf("Error reading data from connection: %s\n", err.Error())
+				break
+			}
+			log.Printf("[%s] %s", conn.RemoteAddr().String(), message)
 		}
-		log.Printf("[%s] %s", conn.RemoteAddr().String(), message)
 	}
+}
+
+func connectionWriteLoop(conn net.Conn, ch chan struct{}) {
+	// Write welcome message to client
+	num, err := conn.Write([]byte("Thank you!\n"))
+	if err != nil {
+		log.Printf("Error sending response message: %s\n", err.Error())
+		ch <- struct{}{}
+		return
+	}
+
+	// Print success to console
+	log.Printf("Sent response message(%d)\n", num)
+
+	for {
+		time.Sleep(time.Second * 5)
+		_, err := conn.Write([]byte("Data: \n"))
+		if err != nil {
+			log.Printf("Error sending data to server: %s\n", err.Error())
+			ch <- struct{}{}
+			return
+		}
+	}
+
 }
