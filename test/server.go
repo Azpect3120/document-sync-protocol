@@ -66,6 +66,10 @@ func handleConnection(conn net.Conn) {
 			if err != nil {
 				if strings.Contains(err.Error(), "forcibly closed by the remote host") {
 					return
+					// I MIGHT NOT BE ABLE TO DO THIS
+					// The NeoVim client throws TONS of these errors when closing
+				} else if strings.Contains(err.Error(), "EOF") {
+					return
 				}
 
 				log.Printf("Error reading data from connection %s: %s", conn.RemoteAddr().String(), err.Error())
