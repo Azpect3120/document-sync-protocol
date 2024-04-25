@@ -17,11 +17,13 @@ if not _G.myPluginLoaded then
         require("docusync").close()
       elseif arg == "send" then
         require("docusync").send("Sending a test packet!\n")
+      elseif arg == "start" then
+        require("docusync").start()
       end
     end,
     {
       nargs = 1,
-      complete = function (_, _, _) return { "connect", "close", "send" } end
+      complete = function (_, _, _) return { "connect", "close", "send", "start" } end
     })
 
   -- Ensure plugin is only loaded once

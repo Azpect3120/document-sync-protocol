@@ -3,8 +3,10 @@ local tcp = require("docusync.tcp")
 
 --- @class Plugin
 --- @field conn Connection | nil
+--- @field server Server | nil
 local M = {
-  conn = nil
+  conn = nil,
+  server = nil
 }
 
 --- Connect to the server
@@ -35,5 +37,19 @@ function M.close()
     M.conn = nil
   end
 end
+
+function M.start()
+  M.server = tcp.start()
+end
+
+ --   Error executing Lua callback: ...rojects/DocumentSyncProtocol/neovim/lua/docusyn 
+ -- nc/tcp.lua:95: attempt to index local 'server' (a nil value) 
+ -- stack traceback: 
+ -- ...rojects/DocumentSyncProtocol/neovim/lua/docusync/tcp.lua:95: in function 'st 
+ -- tart' 
+ -- ...ojects/DocumentSyncProtocol/neovim/lua/docusync/init.lua:42: in function 'st 
+ -- tart' 
+ -- ...s/Projects/DocumentSyncProtocol/neovim/plugin/client.lua:21: in function <.. 
+ -- ..s/Projects/DocumentSyncProtocol/neovim/plugin/client.lua:12> 
 
 return M

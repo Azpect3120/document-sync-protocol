@@ -5,12 +5,18 @@ local host, port = "127.0.0.1", 3270
 --- @field host string
 --- @field port number
 --- @field tcp uv_tcp_t | nil
-local M = {}
+local C = {}
+
+--- @class Server
+--- @field host string
+--- @field port number
+--- @field tcp uv_tcp_t | nil
+local S = {}
 
 --- Connect to the host
 --- @param conn Connection
 --- @return Connection
-function M.connect (conn)
+function C.connect (conn)
   conn.tcp = uv.new_tcp()
 
   -- Nil check on the tcp object
@@ -35,7 +41,7 @@ end
 --- @param conn Connection
 --- @param data string
 --- @return boolean
-function M.send(conn, data)
+function C.send(conn, data)
   -- Ensure connected
   if conn.tcp == nil then
     print("Error sending data: tcp is nil")
@@ -61,7 +67,7 @@ end
 --- Close the connection
 --- @param conn Connection
 --- @return boolean
-function M.close(conn)
+function C.close(conn)
   -- Ensure connected
   if conn.tcp == nil then
     print("Error closing connection: tcp is nil")
@@ -82,4 +88,28 @@ function M.close(conn)
   return success
 end
 
-return M
+--- Start a server
+--- @return Server
+function C.start()
+  local server = S
+  server.tcp = uv.new_tcp()
+
+  local success = server.tcp:bind(host, port)
+  if not success then
+    print("Error binding server to host: " .. host .. ":" .. port)
+    return server
+  end
+
+  server.tcp:listen(5, function (err)
+    if err then
+      print("Error listening on host: " .. err)
+      return
+    end
+
+    print("Server is listening on host: " .. host .. ":" .. port)
+  end)
+
+  return server
+end
+
+return C
