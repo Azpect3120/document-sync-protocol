@@ -1,55 +1,114 @@
--- Imports
-local tcp = require("docusync.tcp")
+-- Globals
+local uv = vim.loop
+local host, port = "127.0.0.1", 3270
 
---- @class Plugin
---- @field conn Connection | nil
---- @field server Server | nil
+-- Main classes
+--- @class Connection
+--- @field host string
+--- @field port number
+--- @field tcp uv_tcp_t | nil
+
+--- @class Server
+--- @field host string
+--- @field port number
+--- @field tcp uv_tcp_t | nil
+
+--- @class Module
+--- @field conn Connection
+--- @field server Server
 local M = {
-  conn = nil,
-  server = nil
+  conn = {
+    tcp = nil,
+    host = "127.0.0.1",
+    port = 3270,
+  },
+  server = {
+    tcp = nil,
+    host = "127.0.0.1",
+    port = 3270,
+  }
 }
 
 --- Connect to the server
 function M.connect ()
-  if M.conn ~= nil then
-    print("A connection already active. Close it first.")
+  if M.conn == nil or M.conn.tcp == nil then
+    -- Create TCP objects on the connection field
+    M.conn.tcp = uv.new_tcp()
+
+    -- Nil check on the tcp object
+    if M.conn.tcp == nil then
+      print("Error connecting to host: tcp is nil")
+      return
+    end
+
+    -- Set connection host and port
+    M.conn.host = host
+    M.conn.port = port
+
+    -- Connect to the host
+    M.conn.tcp:connect(M.conn.host, M.conn.port, function (err)
+      if err then
+        print("Error connecting to host: " .. err)
+        return
+      end
+      print("Connected to host: " .. M.conn.host .. ":" .. M.conn.port)
+    end)
   else
-    M.conn = tcp:connect()
+    -- Already connected or TCP object exists on the connection field
+    print("Already connected to " .. M.conn.host .. ":" .. M.conn.port)
   end
 end
 
 --- Send data to the server
+--- A connection must be established before sending data
 --- @param data string
 function M.send (data)
-  if M.conn == nil then
-    print("No active connection to send data to.")
+  if M.conn == nil or M.conn.tcp == nil then
+    print("Error sending data: connection is nil")
   else
-    M.conn:send(data)
+    -- Ensure the data ends with a \n
+    -- This is a temporary requirement for the server to process the data
+    if not (string.sub(data, -1) == '\n') then
+      data = data .. '\n'
+    end
+
+    -- Write data to the server
+    local error = nil
+    M.conn.tcp:write(data, function (err)
+      error = err
+    end)
+
+    if error then
+      print("Error writing to host: " .. error)
+      return
+    end
+
+    print("Sent data to host: " .. M.conn.host .. ":" .. M.conn.port)
   end
 end
 
 --- Close the connection to the server
 function M.close()
-  if M.conn == nil then
-    print("No active connection to close.")
+  if M.conn == nil or M.conn.tcp == nil then
+    print("Error closing connection: connection is nil")
   else
-    M.conn:close()
-    M.conn = nil
+    -- Close the connection
+    local error = nil
+    M.conn.tcp:close(function (err)
+      error = err
+    end)
+    if error then
+      print("Error closing connection: " .. error)
+      return
+    end
+
+    M.conn.tcp = nil
+    print("Closed connection to host: " .. M.conn.host .. ":" .. M.conn.port)
   end
 end
 
 function M.start()
-  M.server = tcp.start()
 end
 
- --   Error executing Lua callback: ...rojects/DocumentSyncProtocol/neovim/lua/docusyn 
- -- nc/tcp.lua:95: attempt to index local 'server' (a nil value) 
- -- stack traceback: 
- -- ...rojects/DocumentSyncProtocol/neovim/lua/docusync/tcp.lua:95: in function 'st 
- -- tart' 
- -- ...ojects/DocumentSyncProtocol/neovim/lua/docusync/init.lua:42: in function 'st 
- -- tart' 
- -- ...s/Projects/DocumentSyncProtocol/neovim/plugin/client.lua:21: in function <.. 
- -- ..s/Projects/DocumentSyncProtocol/neovim/plugin/client.lua:12> 
-
+-- Return module class
 return M

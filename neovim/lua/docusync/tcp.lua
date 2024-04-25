@@ -1,18 +1,6 @@
 local uv = vim.loop
 local host, port = "127.0.0.1", 3270
 
---- @class Connection
---- @field host string
---- @field port number
---- @field tcp uv_tcp_t | nil
-local C = {}
-
---- @class Server
---- @field host string
---- @field port number
---- @field tcp uv_tcp_t | nil
-local S = {}
-
 --- Connect to the host
 --- @param conn Connection
 --- @return Connection
