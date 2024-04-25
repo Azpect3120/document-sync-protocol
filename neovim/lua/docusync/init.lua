@@ -107,7 +107,68 @@ function M.close()
   end
 end
 
+-- Start a server which listens for incoming connections
 function M.start()
+  if M.server == nil or M.server.tcp == nil then
+    M.server.tcp = uv.new_tcp()
+
+    local success, error, message = M.server.tcp:bind(M.server.host, M.server.port)
+    print("Success: ".. success)
+    if error then
+      print("Error: "..error)
+      print("Message: "..message)
+    end
+    M.server.tcp:read_start(
+      vim.schedule_wrap(function(_, chunk)
+        while true do
+          M.server.tcp:listen(5, function (err)
+            if err then
+              print("Error listening on host: " .. err)
+              return
+            end
+            print("Listening on host: " .. M.server.host .. ":" .. M.server.port)
+          end)
+        end
+      end)
+    )
+
+
+  else
+    print("Server already running on " .. M.server.host .. ":" .. M.server.port)
+  end
+end
+
+function Run ()
+    while 1 do
+      M.server.tcp:listen(5, function (err)
+        if err then
+          print("Error listening on host: " .. err)
+          return
+        end
+        print("Listening on host: " .. M.server.host .. ":" .. M.server.port)
+
+      end)
+    end
+end
+
+-- Stop the server running on the host
+function M.stop()
+  if M.server == nil or M.server.tcp == nil then
+    print("Error stopping server: connection is nil")
+  else
+    -- Close the connection
+    local error = nil
+    M.server.tcp:close(function (err)
+      error = err
+    end)
+    if error then
+      print("Error closing connection: " .. error)
+      return
+    end
+
+    M.server.tcp = nil
+    print("Stopped server on host: " .. M.server.host .. ":" .. M.server.port)
+  end
 end
 
 -- Return module class

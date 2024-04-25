@@ -19,11 +19,13 @@ if not _G.myPluginLoaded then
         require("docusync").send("Sending a test packet!\n")
       elseif arg == "start" then
         require("docusync").start()
+      elseif arg == "stop" then
+        require("docusync").stop()
       end
     end,
     {
       nargs = 1,
-      complete = function (_, _, _) return { "connect", "close", "send", "start" } end
+      complete = function (_, _, _) return { "connect", "close", "send", "start", "stop" } end
     })
 
   -- Ensure plugin is only loaded once
