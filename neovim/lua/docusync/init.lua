@@ -74,9 +74,7 @@ function M.send (data)
 
     -- Write data to the server
     local error = nil
-    M.conn.tcp:write(data, function (err)
-      error = err
-    end)
+    local bytes = M.conn.tcp:try_write(data)
 
     if error then
       print("Error writing to host: " .. error)
@@ -84,6 +82,7 @@ function M.send (data)
     end
 
     print("Sent data to host: " .. M.conn.host .. ":" .. M.conn.port)
+    print("Data(" .. bytes .. "): " .. data)
   end
 end
 
@@ -99,7 +98,13 @@ function M.close()
     end)
     if error then
       print("Error closing connection: " .. error)
-      return
+    end
+
+    M.conn.tcp:shutdown(function (err)
+      error = err
+    end)
+    if error then
+      print("Error shutting down connection: " .. error)
     end
 
     M.conn.tcp = nil
@@ -113,42 +118,31 @@ function M.start()
     M.server.tcp = uv.new_tcp()
 
     local success, error, message = M.server.tcp:bind(M.server.host, M.server.port)
-    print("Success: ".. success)
-    if error then
-      print("Error: "..error)
-      print("Message: "..message)
+    if error or not success then
+      print("Error: "..error .. " Message: "..message)
+    else
+      print("Server started on host: " .. M.server.host .. ":" .. M.server.port)
     end
-    M.server.tcp:read_start(
-      vim.schedule_wrap(function(_, chunk)
-        while true do
-          M.server.tcp:listen(5, function (err)
-            if err then
-              print("Error listening on host: " .. err)
-              return
-            end
-            print("Listening on host: " .. M.server.host .. ":" .. M.server.port)
-          end)
-        end
-      end)
-    )
 
+    M.server.tcp:listen(3, function (err)
+      if err then
+        print("Error creating connection from client: " .. err)
+        return
+      end
+      local client = uv.new_tcp()
 
+      -- local client_success = M.server.tcp:accept(client)
+      local client_success = M.server.tcp:simultaneous_accepts(true)
+      if client_success then
+        print("Client connection accepted")
+      end
+
+      vim.schedule(function () local uv.read_start() end)
+
+    end)
   else
     print("Server already running on " .. M.server.host .. ":" .. M.server.port)
   end
-end
-
-function Run ()
-    while 1 do
-      M.server.tcp:listen(5, function (err)
-        if err then
-          print("Error listening on host: " .. err)
-          return
-        end
-        print("Listening on host: " .. M.server.host .. ":" .. M.server.port)
-
-      end)
-    end
 end
 
 -- Stop the server running on the host
@@ -163,7 +157,13 @@ function M.stop()
     end)
     if error then
       print("Error closing connection: " .. error)
-      return
+    end
+
+    M.server.tcp:shutdown(function (err)
+      error = err
+    end)
+    if error then
+      print("Error shutting down connection: " .. error)
     end
 
     M.server.tcp = nil
