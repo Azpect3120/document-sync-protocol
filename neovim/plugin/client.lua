@@ -16,7 +16,7 @@ if not _G.myPluginLoaded then
       elseif arg == "close" then
         require("docusync").close()
       elseif arg == "send" then
-        require("docusync").send("Sending a test packet!\n")
+        require("docusync").send("Sending a test packet!")
       elseif arg == "start" then
         require("docusync").start()
       elseif arg == "stop" then
