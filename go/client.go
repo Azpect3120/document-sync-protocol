@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"time"
@@ -59,7 +60,7 @@ func connectionWriteLoop(conn net.Conn, ch chan struct{}) {
 
 	for {
 		time.Sleep(time.Second * 5)
-		_, err := conn.Write([]byte("Data: \n"))
+		_, err := conn.Write([]byte(fmt.Sprintf("Data: I was sent from the GO Client at %d\n", time.Now().Unix())))
 		if err != nil {
 			log.Printf("Error sending data to server: %s\n", err.Error())
 			ch <- struct{}{}

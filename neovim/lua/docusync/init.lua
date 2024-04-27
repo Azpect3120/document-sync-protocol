@@ -47,11 +47,18 @@ function M.connect ()
 
     -- Connect to the host
     M.conn.tcp:connect(M.conn.host, M.conn.port, function (err)
-      if err then
-        print("Error connecting to host: " .. err)
-        return
-      end
+      assert(not err, err)
       print("Connected to host: " .. M.conn.host .. ":" .. M.conn.port)
+
+      -- Read data from the server
+      -- THIS WORKS!!!
+      M.conn.tcp:read_start(function (read_err, chunk)
+        assert(not read_err, read_err)
+        if chunk then
+          print("Data received: " .. chunk)
+        end
+      end)
+
     end)
   else
     -- Already connected or TCP object exists on the connection field
@@ -72,14 +79,11 @@ function M.send (data)
       data = data .. '\n'
     end
 
-    -- Write data to the server
-    local error = nil
-    local bytes = M.conn.tcp:try_write(data)
+    -- Attempt to keep connection alive
+    M.conn.tcp:keepalive(true, 0)
 
-    if error then
-      print("Error writing to host: " .. error)
-      return
-    end
+    -- Write data to the server
+    local bytes = M.conn.tcp:try_write(data)
 
     print("Sent data to host: " .. M.conn.host .. ":" .. M.conn.port)
     print("Data(" .. bytes .. "): " .. data)
@@ -112,11 +116,25 @@ function M.close()
   end
 end
 
+--- Handle a new connection
+--- @param client uv_tcp_t
+local function on_connect (client)
+  client:read_start(function (err, chunk)
+    assert(not err, err)  -- This line throws when a client disconnects
+    if chunk then
+      client:write(chunk)
+      print("Data received: " .. chunk)
+    end
+  end)
+end
+
 -- Start a server which listens for incoming connections
 function M.start()
   if M.server == nil or M.server.tcp == nil then
-    M.server.tcp = uv.new_tcp()
+    -- Create TCP objects on the server field
+    M.server.tcp = vim.loop.new_tcp()
 
+    -- Bind the server to the host and port
     local success, error, message = M.server.tcp:bind(M.server.host, M.server.port)
     if error or not success then
       print("Error: "..error .. " Message: "..message)
@@ -124,21 +142,18 @@ function M.start()
       print("Server started on host: " .. M.server.host .. ":" .. M.server.port)
     end
 
-    M.server.tcp:listen(3, function (err)
-      if err then
-        print("Error creating connection from client: " .. err)
-        return
-      end
-      local client = uv.new_tcp()
+    -- Listen for connections
+    M.server.tcp:listen(128, function (err)
+      -- Check for errors
+      assert(not err, err)
 
-      -- local client_success = M.server.tcp:accept(client)
-      local client_success = M.server.tcp:simultaneous_accepts(true)
-      if client_success then
-        print("Client connection accepted")
-      end
+      -- Accept the client
+      local client = vim.loop.new_tcp()
+      M.server.tcp:accept(client)
+      print("Accepted connection from " .. client:getpeername().ip .. ":" .. client:getpeername().port)
 
-      vim.schedule(function () local uv.read_start() end)
-
+      -- Run read-loop on the client
+      on_connect(client)
     end)
   else
     print("Server already running on " .. M.server.host .. ":" .. M.server.port)
@@ -153,14 +168,14 @@ function M.stop()
     -- Close the connection
     local error = nil
     M.server.tcp:close(function (err)
-      error = err
+      assert(not err, err)
     end)
     if error then
       print("Error closing connection: " .. error)
     end
 
     M.server.tcp:shutdown(function (err)
-      error = err
+      assert(not err, err)
     end)
     if error then
       print("Error shutting down connection: " .. error)

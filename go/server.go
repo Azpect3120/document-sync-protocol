@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"net"
 	"strings"
@@ -94,7 +95,7 @@ func connectionWriteLoop(conn net.Conn, ch chan struct{}) {
 
 	for {
 		time.Sleep(time.Second)
-		_, err := conn.Write([]byte("Data: \n"))
+		_, err := conn.Write([]byte(fmt.Sprintf("Data: %d\n", time.Now().Unix())))
 		if err != nil {
 			log.Printf("Error sending data to connection %s: %s\n", conn.RemoteAddr().String(), err.Error())
 			ch <- struct{}{}
