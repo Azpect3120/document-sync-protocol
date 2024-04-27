@@ -1,5 +1,6 @@
 -- Globals
 local uv = vim.loop
+local events = require("docusync.parser.events")
 
 -- Main classes
 --- @class Connection
@@ -37,7 +38,10 @@ local function connection_read_loop(client)
     assert(not err, err) -- This line throws when a client disconnects
     if chunk then
       -- client:write(chunk)  -- This line will echo the data back to the send
-      print("Data received: " .. chunk)
+      print(chunk)
+
+      -- This is temporary until I figure out how to parse the data
+      vim.schedule(function() events.parse(chunk) end)
     end
   end)
 end
@@ -86,8 +90,11 @@ function M.send(data)
   -- Ensure a connection exists before sending
   assert(M.conn and M.conn.tcp, "Error sending data: connection is nil")
 
+  -- Construct the sync document event
+  local event_data = events.construct_sync_document(false, data, "test.txt", nil, os.time())
+
   -- Write data to the server
-  local bytes = M.conn.tcp:try_write(data)
+  local bytes = M.conn.tcp:try_write(event_data)
 
   -- Check if data was sent
   assert(bytes ~= 0, "Error sending data: no bytes written")

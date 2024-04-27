@@ -256,7 +256,7 @@ interface ServerCapabilities {
      *  milliseconds.
      *  When 0, clients will be put into a read-only mode.
      */
-    documentSync: integer;
+    document_sync: integer;
 
     /**
      *  Should the server send and receive document data in a compressed
@@ -276,12 +276,12 @@ interface ServerCapabilities {
      *  milliseconds.
      *  When 0, server will not accept the clients cursor location.
      */
-    cursorSync: integer;
+    cursor_sync: integer;
 
     /**
      *  Should the server display the number of clients connected to 
      *  the server.
      */
-    clientCount: boolean;
+    client_count: boolean;
 }
 ```
