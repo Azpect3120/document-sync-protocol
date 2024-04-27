@@ -12,15 +12,15 @@ if not _G.myPluginLoaded then
     function (opts)
       local arg = opts.fargs[1]
       if arg == "connect" then
-        require("docusync").connect()
+        require("docusync").tcp.connect()
       elseif arg == "close" then
-        require("docusync").close()
+        require("docusync").tcp.close()
       elseif arg == "send" then
-        require("docusync").send("Sending a test packet!")
+        require("docusync").tcp.send("Sending a test packet!")
       elseif arg == "start" then
-        require("docusync").start()
+        require("docusync").tcp.start()
       elseif arg == "stop" then
-        require("docusync").stop()
+        require("docusync").tcp.stop()
       end
     end,
     {
