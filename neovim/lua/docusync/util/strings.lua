@@ -12,4 +12,11 @@ function M.split(str, sep)
   return result
 end
 
+--- Trim whitespace from a string.
+--- @param str string
+--- @return string
+function M.trim(str)
+  return str:match("^%s*(.-)%s*$")
+end
+
 return M

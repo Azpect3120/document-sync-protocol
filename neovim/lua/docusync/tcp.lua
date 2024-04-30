@@ -41,7 +41,9 @@ local function connection_read_loop(client)
       print(chunk)
 
       -- This is temporary until I figure out how to parse the data
-      vim.schedule(function() events.parse(chunk) end)
+      vim.schedule(function()
+        events.parse(chunk)
+      end)
     end
   end)
 end

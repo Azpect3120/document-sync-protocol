@@ -1,6 +1,7 @@
 --- Imports
 local util = require("docusync.util")
 local strings = util.strings
+local parser = require("docusync.parser.parser")
 
 --- Capabilities class
 --- @class Capabilities
@@ -37,10 +38,17 @@ local M = {
 --- @param data string
 function M.parse(data)
   -- Parse out the event type
-  -- Yes this is messy, and yes it works, and yes I will clean it up later
-  local event = strings.split(strings.split(data:sub(2, -2), ",")[1], ":")[2]
+  -- Ignore the field issue :(
+  local event = vim.fn.json_decode(data).event
+  assert(event, "Failed to parse event: Could not parse event type (#1)")
 
-  print(event)
+  -- Switch the event based on the type
+  -- The entire data string is passed into the helper functions
+  if event == "document/sync" then
+    parser.document_sync(data, M.capabilities)
+  else
+    print("Unknown event: " .. event)
+  end
 
 end
 
