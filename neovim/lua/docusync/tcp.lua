@@ -90,32 +90,6 @@ function M.connect(host, port)
   end)
 end
 
---- Send data to the connected server.
---- A connection must be established before sending data.
---- This function will throw an error if a connection does not exist.
---- This function will also throw an error if no bytes are written.
---- The number of bytes written will be returned.
---- @param data string
---- @return integer
-function M.send(data)
-  -- Ensure a connection exists before sending
-  assert(M.conn and M.conn.tcp, "Error sending data: connection is nil")
-
-  -- Construct the sync document event
-  -- local event_data = events.construct_sync_document(false, data, "test.txt", nil, os.time())
-  local event_data = events.construct_update_document(false, "azpect", data, "test.txt", nil, os.time())
-
-  -- Write data to the server
-  local bytes = M.conn.tcp:try_write(event_data)
-
-  -- Check if data was sent
-  assert(bytes ~= 0, "Error sending data: no bytes written")
-
-  -- Print success message and return
-  print("Sent " .. bytes .. " bytes to host: " .. M.conn.host .. ":" .. M.conn.port)
-  return bytes
-end
-
 --- Close the connection to the server.
 --- A connection must be established before closing.
 --- This function will throw an error if a connection does not exist.
