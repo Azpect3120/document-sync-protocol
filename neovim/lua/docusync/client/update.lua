@@ -16,7 +16,7 @@ local M = {
 --- @param document string Name of the document
 --- @param identifier string Identifier of the document ("" if none)
 --- @param bufnr integer Buffer number of the document
---- @return nil
+--- @return integer
 function M.on_save(conn, document, identifier, bufnr)
   -- Create auto command
   local cmd_id = vim.api.nvim_create_autocmd("BufWritePost", {
@@ -47,7 +47,14 @@ function M.on_save(conn, document, identifier, bufnr)
         end)
 
         -- Delete the auto command
-        M.stop_on_save(bufnr)
+        local cmd_id = M._settings.commands[bufnr]
+
+        -- Check if the command exists and delete it if it does
+        if cmd_id then
+          vim.api.nvim_del_autocmd(cmd_id)
+        end
+
+        -- Print error message
         error("Connection is no longer active. Connection has been terminated")
       end
     end
@@ -56,19 +63,16 @@ function M.on_save(conn, document, identifier, bufnr)
   -- Save the command id in the settings
   -- This is used to delete the command later
   M._settings.commands[bufnr] = cmd_id
+
+  -- Return the command id
+  return cmd_id
 end
 
 --- Stop the auto command that updates the document on save
---- @param bufnr integer Buffer number of the document
+--- @param cmd_id integer ID of the auto command to delete
 --- @return nil
-function M.stop_on_save(bufnr)
-  -- Get the command id
-  local cmd_id = M._settings.commands[bufnr]
-
-  -- Check if the command exists and delete it if it does
-  if cmd_id then
+function M.stop_on_save(cmd_id)
     vim.api.nvim_del_autocmd(cmd_id)
-  end
 end
 
 return M

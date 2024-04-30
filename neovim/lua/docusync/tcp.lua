@@ -8,6 +8,7 @@ local client = require("docusync.client")
 --- @field host string
 --- @field port number
 --- @field tcp uv_tcp_t | nil
+--- @field cmds table<number, string>
 
 --- @class Server
 --- @field host string
@@ -22,6 +23,7 @@ local M = {
     tcp = nil,
     host = "127.0.0.1", -- Default host
     port = 3270,        -- Default port
+    cmds = {}           -- Command IDs
   },
   server = {
     tcp = nil,
@@ -33,9 +35,9 @@ local M = {
 --- Handle a connections read loop.
 --- This function can be used on both a server and a client to read all incoming data.
 --- This function will throw an error if the client disconnects.
---- @param client uv_tcp_t
-local function connection_read_loop(client)
-  client:read_start(function(err, chunk)
+--- @param c uv_tcp_t
+local function connection_read_loop(c)
+  c:read_start(function(err, chunk)
     assert(not err, err) -- This line throws when a client disconnects
     if chunk then
       -- client:write(chunk)  -- This line will echo the data back to the send
@@ -82,7 +84,11 @@ function M.connect(host, port)
       local bufnr = vim.api.nvim_get_current_buf()
       local document = vim.api.nvim_buf_get_name(bufnr)
       local identifier = "Azpect" -- hard coded for now
-      client.update.on_save(M.conn, document, identifier, bufnr)
+      local cmd_id = client.update.on_save(M.conn, document, identifier, bufnr)
+
+      -- Add the command to the connection commands table
+      -- This is used to stop the commands when the connection is closed
+      M.conn.cmds[cmd_id] = "document/update"
     end)
 
     -- Print success message
@@ -105,6 +111,14 @@ function M.close()
     M.conn.tcp:shutdown(function(err) assert(not err, err) end)
     M.conn.tcp = nil
   end)
+
+  -- Stop all commands running
+  for cmd_id in pairs(M.conn.cmds) do
+    vim.api.nvim_del_autocmd(cmd_id)
+  end
+
+  -- Reset commands table
+  M.conn.cmds = {}
 
   -- Print success message
   print("Closed connection to host: " .. M.conn.host .. ":" .. M.conn.port)
