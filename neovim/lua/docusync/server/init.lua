@@ -1,5 +1,5 @@
-local update = require("docusync.client.update")
+local sync = require("docusync.server.sync")
 
 return {
-  update = update
+  sync = sync
 }

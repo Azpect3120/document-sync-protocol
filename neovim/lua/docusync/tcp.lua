@@ -2,6 +2,7 @@
 local uv = vim.loop
 local events = require("docusync.parser.events")
 local c_update = require("docusync.client.update")
+local s_sync = require("docusync.server.sync")
 
 -- Main classes
 --- @class Connection
@@ -14,6 +15,8 @@ local c_update = require("docusync.client.update")
 --- @field host string
 --- @field port number
 --- @field tcp uv_tcp_t | nil
+--- @field connections table<uv_tcp_t, uv_tcp_t>
+--- @field timer uv_timer_t | nil
 
 --- @class Module
 --- @field conn Connection
@@ -29,6 +32,8 @@ local M = {
     tcp = nil,
     host = "127.0.0.1", -- Default host
     port = 3270,        -- Default port
+    connections = {},    -- Connections
+    timer = nil
   }
 }
 
@@ -131,6 +136,7 @@ end
 function M.start(host, port)
   -- Ensure the server is not already running
   assert(M.server.tcp == nil, "Error starting server: server is already running")
+  assert(M.server.timer == nil, "Error starting server: server timer is already running")
 
   -- Update the server class object
   M.server.tcp = uv.new_tcp()
@@ -145,6 +151,9 @@ function M.start(host, port)
   print("Server started on host: " .. M.server.host .. ":" .. M.server.port)
 
   -- Get data of the current buffer and start the update event loop
+  local bufnr = vim.api.nvim_get_current_buf()
+  local document = vim.api.nvim_buf_get_name(bufnr)
+  M.server.timer = s_sync.start_sync_loop(M.server, document, bufnr)
 
   -- Listen for connections
   M.server.tcp:listen(128, function(err)
@@ -155,6 +164,9 @@ function M.start(host, port)
     local client = uv.new_tcp()
     M.server.tcp:accept(client)
     print("Accepted connection from " .. client:getpeername().ip .. ":" .. client:getpeername().port)
+
+    -- Add the client to the connections table
+    M.server.connections[client] = client
 
     -- Run read-loop on the client
     connection_read_loop(client)
@@ -169,9 +181,14 @@ end
 function M.stop()
   -- Ensure the server exists before stopping
   assert(M.server.tcp, "Error stopping server: server is nil")
+  assert(M.server.timer, "Error stopping server: server timer is nil")
 
   -- Close, shutdown and reset the server
   vim.schedule(function()
+    M.server.timer:stop()
+    M.server.timer:close()
+    M.server.timer = nil
+
     M.server.tcp:close(function(err) assert(not err, err) end)
     M.server.tcp:shutdown(function(err) assert(not err, err) end)
     M.server.tcp = nil
