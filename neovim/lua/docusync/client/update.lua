@@ -36,8 +36,8 @@ function M.on_save(conn, document, identifier, bufnr)
 
       -- Send the event to the server if the connection is active
       if (conn.tcp:is_active()) then
-        local bytes = conn.tcp:try_write(event)
-        print("Updated document on the server! Bytes sent: " .. bytes)
+        local _ = conn.tcp:try_write(event)
+        -- print("Updated document on the server! Bytes sent: " .. bytes)
       else
         -- Stop the connection
         vim.schedule(function()

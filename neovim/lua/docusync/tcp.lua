@@ -1,7 +1,7 @@
 -- Globals
 local uv = vim.loop
 local events = require("docusync.parser.events")
-local client = require("docusync.client")
+local c_update = require("docusync.client.update")
 
 -- Main classes
 --- @class Connection
@@ -35,14 +35,11 @@ local M = {
 --- Handle a connections read loop.
 --- This function can be used on both a server and a client to read all incoming data.
 --- This function will throw an error if the client disconnects.
---- @param c uv_tcp_t
-local function connection_read_loop(c)
-  c:read_start(function(err, chunk)
+--- @param client uv_tcp_t
+local function connection_read_loop(client)
+  client:read_start(function(err, chunk)
     assert(not err, err) -- This line throws when a client disconnects
     if chunk then
-      -- client:write(chunk)  -- This line will echo the data back to the send
-      print(chunk)
-
       -- This is temporary until I figure out how to parse the data
       vim.schedule(function()
         events.parse(chunk)
@@ -84,7 +81,7 @@ function M.connect(host, port)
       local bufnr = vim.api.nvim_get_current_buf()
       local document = vim.api.nvim_buf_get_name(bufnr)
       local identifier = "Azpect" -- hard coded for now
-      local cmd_id = client.update.on_save(M.conn, document, identifier, bufnr)
+      local cmd_id = c_update.on_save(M.conn, document, identifier, bufnr)
 
       -- Add the command to the connection commands table
       -- This is used to stop the commands when the connection is closed
@@ -146,6 +143,8 @@ function M.start(host, port)
 
   -- Print success message
   print("Server started on host: " .. M.server.host .. ":" .. M.server.port)
+
+  -- Get data of the current buffer and start the update event loop
 
   -- Listen for connections
   M.server.tcp:listen(128, function(err)
