@@ -120,8 +120,11 @@ interface ConnectServerEvent {
      *  the connection/user.
      *  An ID will be returned in the response which the server will map 
      *  to this identifier.
+     *  If not provided, a random identifier will be generated and provided.
+     *  If the server does not implement identifiers, this value can be 
+     *  omitted.
      */
-    identifier: string;
+    identifier?: string;
 
     /**
      *  Password required to connect to the server.
@@ -149,11 +152,11 @@ interface ConnectServerResponse {
     error: string | null;
 
     /**
-     *  ID provided for the identifier provided in the request.
-     *  This ID will be used to map the connection to the user.
+     *  Identifier provided in the request, unless it was not in which
+     *  case this will be the randomly generated identifier.
      *  If connection is unsuccessful, this will be null.
      */
-    id: string | null;
+    identifier: string | null;
 
     /**
      *  Capabilities the server has implemented.
@@ -166,15 +169,12 @@ interface ConnectServerResponse {
 
 ### [Sync Document](#Sync-Document)
 
-Server event is emitted by the server which sends back the document to each client. Client event is emitted by the client to the server. The time between syncs on the client side is determined by the client's implementation. The time between the syncs on the server side is determined by the server when it is spawned.
+Event is emitted by the server which sends back the document to each client. Client event is emitted by the client to the server. The time between syncs on the client side is determined by the client's implementation. The time between the syncs on the server side is determined by the server when it is spawned.
 
-Client events can be emitted at any point but the server event will be emitted only when the timer has completed a full cycle. If the server sync timer is reduced the clients data will be updated quicker.
-
-#### **Server**
 
 ### Event
 ```typescript
-interface ServerSyncDocumentEvent {
+interface SyncDocumentEvent {
     /**
      *  Name of the event being emitted.
      *  Event properties are unique and found in all events.
@@ -196,7 +196,7 @@ interface ServerSyncDocumentEvent {
      *  If a partial is provided the location property should be used by 
      *  the client to determine the location to swap the data into.
      */
-    content: string;
+    content: string[];
 
     /**
      *  Name of the document that is being synced.
@@ -215,7 +215,7 @@ interface ServerSyncDocumentEvent {
      *  omitted, the content will be ignored by the client until the next
      *  successful sync. An error here will result in an unsuccessful sync.
      */
-    location?: integer;
+    location: integer | null;
 
     /**
      *  Timestamp of this update.
@@ -226,16 +226,73 @@ interface ServerSyncDocumentEvent {
 ```
 No response is expected from the client to the server upon emitting this event.
 
-#### **Client**
+
+### [Update Document](#Update-Document)
+
+Event is emitted by the client to the server. The time between syncs on the client side is determined by the client's implementation. The action that triggers the event is also determined by the client's implementation.
+
+Client events can be emitted at any point but the server event will be emitted only when the timer has completed a full cycle. If the server sync timer is reduced the clients data will be updated quicker.
 
 ### Event
 ```typescript
-interface ClientSyncDocumentEvent {
+interface UpdateDocumentEvent {
     /**
      *  Name of the event being emitted.
      *  Event properties are unique and found in all events.
      */
-    event: string = "client/sync_document";
+    event: string = "document/update";
+
+    /**
+     *  identifier of the client who is sending this update to the server.
+     *  This value is provided by the server when the client connects.
+     *  If the server does not impliment identifiers, this value can be
+     *  omitted.
+     */
+    identifier: string | null;
+
+    /**
+     *  Defines if the document provided a partial or an entire document.
+     *  If false, the servers entire document can be overwritten by the 
+     *  new data.
+     */ 
+    partial: boolean;
+
+    /**
+     *  Updated document data. 
+     *  Compression algorithms can be used but only if both the client and 
+     *  server support the implementation, which is defined in the server 
+     *  capabilities.
+     *  If a partial is provided the location property should be used by 
+     *  the client to determine the location to swap the data into.
+     */
+    content: string[];
+
+    /**
+     *  Name of the document that is being updated.
+     *  When multi-file support is implemented this will be a bigger deal
+     *  but for the time being it is just used to ensure the right document
+     *  is being sent and received.
+     */
+    document: string;
+
+    /**
+     *  Still not entirely sure how this is going to work but this value 
+     *  will be used by the server to determine where to apply the partial 
+     *  document data.
+     *  If the data being sent is not in a partial format then this value
+     *  can be omitted. But if it is a partial, the and this value is 
+     *  omitted, the content will be ignored by the server until the next
+     *  successful update. An error here will result in an unsuccessful 
+     *  update.
+     */
+    location: integer | null;
+
+    /**
+     *  Timestamp of this update.
+     *  Depending on the server implementation this can be used in various
+     *  places.
+     */
+    time: Date;
 }
 ```
 
@@ -263,7 +320,7 @@ interface ServerCapabilities {
      *  format.
      *  If this value is omitted, compression will not be supported.
      */
-    compression?: string = "LZMA" | "GZIP" | "DEFLATE" | "ZLIB";
+    compression: string = "LZMA" | "GZIP" | "DEFLATE" | "ZLIB" | null;
 
     /**
      *  Should the server display the users identifier in the document.

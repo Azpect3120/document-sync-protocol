@@ -1,6 +1,7 @@
 -- Globals
 local uv = vim.loop
 local events = require("docusync.parser.events")
+local client = require("docusync.client")
 
 -- Main classes
 --- @class Connection
@@ -76,6 +77,14 @@ function M.connect(host, port)
     -- Read data from the server
     connection_read_loop(M.conn.tcp)
 
+    -- Get document information and start the event loop
+    vim.schedule(function()
+      local bufnr = vim.api.nvim_get_current_buf()
+      local document = vim.api.nvim_buf_get_name(bufnr)
+      local identifier = "Azpect" -- hard coded for now
+      client.update.on_save(M.conn, document, identifier, bufnr)
+    end)
+
     -- Print success message
     print("Connected to host: " .. M.conn.host .. ":" .. M.conn.port)
   end)
@@ -93,7 +102,8 @@ function M.send(data)
   assert(M.conn and M.conn.tcp, "Error sending data: connection is nil")
 
   -- Construct the sync document event
-  local event_data = events.construct_sync_document(false, data, "test.txt", nil, os.time())
+  -- local event_data = events.construct_sync_document(false, data, "test.txt", nil, os.time())
+  local event_data = events.construct_update_document(false, "azpect", data, "test.txt", nil, os.time())
 
   -- Write data to the server
   local bytes = M.conn.tcp:try_write(event_data)
