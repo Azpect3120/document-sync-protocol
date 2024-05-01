@@ -207,15 +207,15 @@ interface SyncDocumentEvent {
     document: string;
 
     /**
-     *  Still not entirely sure how this is going to work but this value 
-     *  will be used by the client to determine where to apply the partial 
-     *  document data.
+     *  The array if values will contain line numbers, the first index 
+     *  value will define the start line and the second will define the
+     *  end line.
      *  If the data being sent is not in a partial format then this value
      *  can be omitted. But if it is a partial, the and this value is 
      *  omitted, the content will be ignored by the client until the next
      *  successful sync. An error here will result in an unsuccessful sync.
      */
-    location: integer | null;
+    location: integer[2] | null;
 
     /**
      *  Timestamp of this update.
@@ -276,16 +276,16 @@ interface UpdateDocumentEvent {
     document: string;
 
     /**
-     *  Still not entirely sure how this is going to work but this value 
-     *  will be used by the server to determine where to apply the partial 
-     *  document data.
+     *  The array if values will contain line numbers, the first index 
+     *  value will define the start line and the second will define the
+     *  end line.
      *  If the data being sent is not in a partial format then this value
      *  can be omitted. But if it is a partial, the and this value is 
      *  omitted, the content will be ignored by the server until the next
      *  successful update. An error here will result in an unsuccessful 
      *  update.
      */
-    location: integer | null;
+    location: integer[2] | null;
 
     /**
      *  Timestamp of this update.

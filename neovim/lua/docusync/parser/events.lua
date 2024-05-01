@@ -54,20 +54,12 @@ end
 
 --- Construct sync document event.
 --- Called by the server to construct a sync document event to be sent to the client.
---- Params:
----  - partial: is the content a partial or full document
----  - content: the content to sync
----  - document: the document to sync (name)
----  - location: the location to sync (only for use with partials)
----  - time: the time this event was created
---- Returns:
----  - the constructed sync document event to send to the client
---- @param partial boolean
---- @param content string[]
---- @param document string
---- @param location integer | nil
---- @param time integer
---- @return string
+--- @param partial boolean Is the content a partial or full document
+--- @param content table<string> The document content as lines
+--- @param document string The document name
+--- @param location table<integer> Should have to integers [ start_line, end_line ], it not a partial, use a blank table
+--- @param time integer The time the event was created
+--- @return string event The constructed event
 function M.construct_sync_document(partial, content, document, location, time)
   -- Check if document sync is supported
   assert(M.capabilities.document_sync > 0, "Document sync is not supported")
@@ -81,7 +73,7 @@ function M.construct_sync_document(partial, content, document, location, time)
     partial = partial,
     content = content,
     document = document,
-    location = location or 0,
+    location = location,
     time = time,
   })
 
@@ -90,22 +82,13 @@ end
 
 --- Construct update document event.
 --- Called by the client to construct an update document event to be sent to the server.
---- Params:
----  - partial: is the content a partial or full document
----  - identifier: identifier of the client emitting the event ("" to omit this value)
----  - content: the content to sync
----  - document: the document to sync (name)
----  - location: the location to sync (only for use with partials)
----  - time: the time this event was created
---- Returns:
----  - the constructed sync document event to send to the client
---- @param partial boolean
---- @param identifier string
---- @param content string[]
---- @param document string
---- @param location integer | nil
---- @param time integer
---- @return string
+--- @param partial boolean Is the content a partial or full document
+--- @param identifier string The client identifier:w
+--- @param content table<string> The document content as lines
+--- @param document string The document name
+--- @param location table<integer> Should have to integers [ start_line, end_line ], it not a partial, use a blank table
+--- @param time integer The time the event was created
+--- @return string event The constructed event
 function M.construct_update_document(partial, identifier, content, document, location, time)
   -- Check if document sync is supported
   assert(M.capabilities.document_sync > 0, "Document sync is not supported")
@@ -120,12 +103,11 @@ function M.construct_update_document(partial, identifier, content, document, loc
     partial = partial,
     content = content,
     document = document,
-    location = location or 0,
+    location = location,
     time = time,
   })
 
   return event
-
 end
 
 -- Return parser

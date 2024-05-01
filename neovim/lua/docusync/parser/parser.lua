@@ -14,7 +14,12 @@ function M.document_sync (data, capabilities)
   for _, bufnr in ipairs(bufs) do
     local name = vim.api.nvim_buf_get_name(bufnr)
     if (name == event.document) then
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, event.content)
+      if (event.partial) then
+        assert(event.location, "Partial document sync requires a location")
+        vim.api.nvim_buf_set_lines(bufnr, event.location[1], event.location[2], false, event.content)
+      else
+        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, event.content)
+      end
     end
   end
 end
@@ -35,7 +40,12 @@ function M.document_update (data, capabilities)
   for _, bufnr in ipairs(bufs) do
     local name = vim.api.nvim_buf_get_name(bufnr)
     if (name == event.document) then
-      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, event.content)
+      if (event.partial) then
+        assert(event.location, "Partial document sync requires a location")
+        vim.api.nvim_buf_set_lines(bufnr, event.location[1], event.location[2], false, event.content)
+      else
+        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, event.content)
+      end
     end
   end
 end

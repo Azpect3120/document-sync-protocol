@@ -24,13 +24,13 @@ function M.on_save(conn, document, identifier, bufnr)
     pattern = document, -- Only run when the target document is saved
     desc = "Update document to server",
     callback = function()
-      -- Construct the sync document event
+      -- Construct the sync document event without partial content
       local event = events.construct_update_document(
         false,
         identifier,
         vim.api.nvim_buf_get_lines(bufnr, 0, -1, false),
         document,
-        nil,
+        {},
         os.time()
       )
 
