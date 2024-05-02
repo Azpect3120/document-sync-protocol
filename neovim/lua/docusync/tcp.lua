@@ -17,6 +17,8 @@ local s_sync = require("docusync.server.sync")
 --- @field tcp uv_tcp_t | nil
 --- @field connections table<uv_tcp_t, uv_tcp_t>
 --- @field timer uv_timer_t | nil
+--- @field f_update boolean Should the server update the document
+--- @field cmds table<number, string>
 
 --- @class Module
 --- @field conn Connection
@@ -33,7 +35,9 @@ local M = {
     host = "127.0.0.1", -- Default host
     port = 3270,        -- Default port
     connections = {},    -- Connections
-    timer = nil
+    timer = nil,
+    f_update = false,
+    cmds = {},
   }
 }
 
@@ -47,7 +51,7 @@ local function connection_read_loop(client)
     if chunk then
       -- This is temporary until I figure out how to parse the data
       vim.schedule(function()
-        events.parse(chunk)
+        events.parse(M.server, chunk)
       end)
     end
   end)
@@ -155,6 +159,10 @@ function M.start(host, port)
   local document = vim.api.nvim_buf_get_name(bufnr)
   M.server.timer = s_sync.start_sync_loop(M.server, document, bufnr)
 
+  -- Using the data start the on_save loop
+  local cmd_id = s_sync.on_save(M.server, document, bufnr)
+  M.server.cmds[cmd_id] = "server/f_update"
+
   -- Listen for connections
   M.server.tcp:listen(128, function(err)
     -- Check for errors
@@ -192,6 +200,11 @@ function M.stop()
     M.server.tcp:close(function(err) assert(not err, err) end)
     M.server.tcp:shutdown(function(err) assert(not err, err) end)
     M.server.tcp = nil
+
+    -- Stop all commands running
+    for cmd_id in pairs(M.server.cmds) do
+      vim.api.nvim_del_autocmd(cmd_id)
+    end
   end)
 
   -- Print success message

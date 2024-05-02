@@ -33,8 +33,9 @@ local M = {
 }
 
 --- Parse events data
+--- @param server Server
 --- @param data string
-function M.parse(data)
+function M.parse(server, data)
   -- Parse out the event type
   -- Ignore the field issue :(
   local event = vim.fn.json_decode(data).event
@@ -45,7 +46,7 @@ function M.parse(data)
   if event == "document/sync" then
     parser.document_sync(data, M.capabilities)
   elseif event == "document/update" then
-    parser.document_update(data, M.capabilities)
+    parser.document_update(server, data, M.capabilities)
   else
     print("Unknown event: " .. event)
   end
