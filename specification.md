@@ -167,6 +167,41 @@ interface ConnectServerResponse {
 }
 ```
 
+### [Disconnect from Server](#Disconnect-from-Server)
+
+Ran by the user who wishes to disconnect from the server. The callers files will remain unchanged until the connection is re-established. The connection is expected to be closed once this event is emitted, hence, no response is expected.
+
+### Event
+
+```typescript
+interface DisconnectServerEvent {
+    /**
+     *  Name of the event being emitted.
+     *  Event properties are unique and found in all events.
+     */
+    event: string = "server/disconnect";
+
+    /**
+     *  Address to attempt to disconnect from. If the host provided
+     *  does not match the host the client is connected to, this event
+     *  will be ignored.
+     *  Port should be provided as well.
+     */
+    host: string;
+
+    /**
+     *  Similar to a username which is provided to the server to identify 
+     *  the connection/user. This value is used to let the server know which
+     *  client is disconnecting.
+     *  If the server does not implement identifiers, this value can be 
+     *  omitted.
+     */
+    identifier?: string;
+}
+```
+
+No response is expected from the server to the client upon emitting this event.
+
 ### [Sync Document](#Sync-Document)
 
 Event is emitted by the server which sends back the document to each client. Client event is emitted by the client to the server. The time between syncs on the client side is determined by the client's implementation. The time between the syncs on the server side is determined by the server when it is spawned.
@@ -224,6 +259,7 @@ interface SyncDocumentEvent {
     time: Date;
 }
 ```
+
 No response is expected from the client to the server upon emitting this event.
 
 
