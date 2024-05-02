@@ -194,9 +194,9 @@ interface DisconnectServerEvent {
      *  the connection/user. This value is used to let the server know which
      *  client is disconnecting.
      *  If the server does not implement identifiers, this value can be 
-     *  omitted.
+     *  blank.
      */
-    identifier?: string;
+    identifier: string;
 }
 ```
 

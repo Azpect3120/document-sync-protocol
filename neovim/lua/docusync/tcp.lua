@@ -3,6 +3,7 @@ local uv = vim.loop
 local events = require("docusync.parser.events")
 local c_update = require("docusync.client.update")
 local s_sync = require("docusync.server.sync")
+local capabilities = require("docusync.capabilities.capabilities")
 
 -- Main classes
 --- @class Connection
@@ -16,6 +17,7 @@ local s_sync = require("docusync.server.sync")
 --- @field port number
 --- @field tcp uv_tcp_t | nil
 --- @field connections table<uv_tcp_t, uv_tcp_t>
+--- @field capabilities Capabilities
 --- @field timer uv_timer_t | nil
 --- @field f_update boolean Should the server update the document
 --- @field cmds table<number, string>
@@ -34,6 +36,7 @@ local M = {
     tcp = nil,
     host = "127.0.0.1", -- Default host
     port = 3270,        -- Default port
+    capabilities = capabilities.default(),
     connections = {},    -- Connections
     timer = nil,
     f_update = false,
@@ -90,7 +93,7 @@ function M.connect(host, port)
       local bufnr = vim.api.nvim_get_current_buf()
       local document = vim.api.nvim_buf_get_name(bufnr)
       local identifier = "Azpect" -- hard coded for now
-      local cmd_id = c_update.on_save(M.conn, document, identifier, bufnr)
+      local cmd_id = c_update.on_save(M.server, M.conn, document, identifier, bufnr)
 
       -- Add the command to the connection commands table
       -- This is used to stop the commands when the connection is closed

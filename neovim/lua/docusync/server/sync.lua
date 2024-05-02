@@ -30,6 +30,7 @@ function M.start_sync_loop (server, document, bufnr)
     if (server.f_update) then
       -- Construct the sync event without partial content
       local event = events.construct_sync_document(
+        server,
         false,
         vim.api.nvim_buf_get_lines(bufnr, 0, -1, false),
         document,

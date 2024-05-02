@@ -12,12 +12,13 @@ local M = {
 
 --- Starts an auto command to update the document to
 --- the server each time the file is saved.
---- @param conn Connection Connection class from main data module
+--- @param server Server Server object from main data module
+--- @param conn Connection Connection object from main data module
 --- @param document string Name of the document
 --- @param identifier string Identifier of the document ("" if none)
 --- @param bufnr integer Buffer number of the document
 --- @return integer
-function M.on_save(conn, document, identifier, bufnr)
+function M.on_save(server, conn, document, identifier, bufnr)
   -- Create auto command
   local cmd_id = vim.api.nvim_create_autocmd("BufWritePost", {
     group = vim.api.nvim_create_augroup("docusync", { clear = true }),
@@ -26,6 +27,7 @@ function M.on_save(conn, document, identifier, bufnr)
     callback = function()
       -- Construct the sync document event without partial content
       local event = events.construct_update_document(
+        server,
         false,
         identifier,
         vim.api.nvim_buf_get_lines(bufnr, 0, -1, false),
