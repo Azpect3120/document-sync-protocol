@@ -72,7 +72,7 @@ end
 --- @param cmd_id integer ID of the auto command to delete
 --- @return nil
 function M.stop_on_save(cmd_id)
-    vim.api.nvim_del_autocmd(cmd_id)
+  vim.api.nvim_del_autocmd(cmd_id)
 end
 
 return M
