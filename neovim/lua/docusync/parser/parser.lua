@@ -4,7 +4,7 @@ local M = {}
 --- Parse the document/sync event being sent from the server.
 --- @param data string
 --- @param capabilities Capabilities
-function M.document_sync (data, capabilities)
+function M.document_sync(data, capabilities)
   -- Check if document sync is supported
   assert(capabilities.document_sync, "Document sync is not supported")
 
@@ -19,7 +19,17 @@ function M.document_sync (data, capabilities)
         assert(event.location, "Partial document sync requires a location")
         vim.api.nvim_buf_set_lines(bufnr, event.location[1], event.location[2], false, event.content)
       else
-        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, event.content)
+        -- Get the users mode, and wait until they are in normal mode to update the buffer
+        local mode = vim.api.nvim_get_mode().mode
+
+        if mode ~= "i" then
+          vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, event.content)
+        else
+          -- Execute the autocmd
+          -- This seems to leak the auto command but honestly, idfk
+          vim.api.nvim_command("autocmd InsertLeave <buffer> lua vim.api.nvim_buf_set_lines(" ..
+          bufnr .. ", 0, -1, false, " .. vim.inspect(event.content) .. ")")
+        end
       end
     end
   end
@@ -29,7 +39,7 @@ end
 --- @param server Server
 --- @param data string
 --- @param capabilities Capabilities
-function M.document_update (server, data, capabilities)
+function M.document_update(server, data, capabilities)
   -- Check if document sync is supported
   assert(capabilities.document_sync, "Document sync is not supported")
   assert(server, "Server is not defined")
@@ -57,15 +67,14 @@ function M.document_update (server, data, capabilities)
   server.f_update = true
 end
 
-
 return M
 
- --   Error executing vim.schedule lua callback: ...cumentSyncProtocol/neovim/lua/docu 
- -- usync/parser/parser.lua:54: attempt to index local 'server' (a nil value) 
- -- stack traceback: 
- -- ...cumentSyncProtocol/neovim/lua/docusync/parser/parser.lua:54: in function 'do 
- -- ocument_update' 
- -- ...cumentSyncProtocol/neovim/lua/docusync/parser/events.lua:49: in function 'pa 
- -- arse' 
- -- ...rojects/DocumentSyncProtocol/neovim/lua/docusync/tcp.lua:52: in function <.. 
- -- ..rojects/DocumentSyncProtocol/neovim/lua/docusync/tcp.lua:51> 
+--   Error executing vim.schedule lua callback: ...cumentSyncProtocol/neovim/lua/docu
+-- usync/parser/parser.lua:54: attempt to index local 'server' (a nil value)
+-- stack traceback:
+-- ...cumentSyncProtocol/neovim/lua/docusync/parser/parser.lua:54: in function 'do
+-- ocument_update'
+-- ...cumentSyncProtocol/neovim/lua/docusync/parser/events.lua:49: in function 'pa
+-- arse'
+-- ...rojects/DocumentSyncProtocol/neovim/lua/docusync/tcp.lua:52: in function <..
+-- ..rojects/DocumentSyncProtocol/neovim/lua/docusync/tcp.lua:51>
