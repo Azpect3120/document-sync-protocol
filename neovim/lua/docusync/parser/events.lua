@@ -1,14 +1,6 @@
 --- Imports
 local parser = require("docusync.parser.parser")
 
---- Capabilities class
---- @class Capabilities
---- @field document_sync integer
---- @field compression string | nil
---- @field identifiers boolean
---- @field cursor_sync integer
---- @field client_count boolean
-
 --- Sync document event class
 --- @class E_SyncDocument
 --- @field event string = "document/sync"
