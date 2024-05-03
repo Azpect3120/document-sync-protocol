@@ -19,6 +19,7 @@
 - [Events and Notifications](#EventsAndNotifications)
   - [Start Server](#StartServer)
   - [Connect to Server](#ConnectToServer)
+  - [Disconnect from Server](#DisconnectFromServer)
   - [Sync Document](#SyncDocument)
   - [Update Document](#UpdateDocument)
 - [Server & Client Shared Types](#Server&ClientSharedTypes)
@@ -213,6 +214,40 @@ interface NewClientConnectionNotification {
      *  Depending on the client implementation this can be used in the UI.
      */
     time: Date;
+}
+```
+
+### <a id="DisconnectFromServer">Disconnect from Server</a>
+
+Ran by the user who wishes to disconnect from the server. The callers files will remain unchanged until the connection is re-established.
+The connection is expected to be closed once this event is emitted, hence, no response is expected.
+
+#### <a id="DisconnectServerEvent">Event</a>
+
+```typescript
+interface DisconnectServerEvent {
+    /**
+     *  Name of the event being emitted.
+     *  Event properties are unique and found in all events.
+     */
+    event: string = "server/disconnect";
+
+    /**
+     *  Address to attempt to disconnect from. If the host provided
+     *  does not match the host the client is connected to, this event
+     *  will be ignored.
+     *  Port should be provided as well.
+     */
+    host: string;
+
+    /**
+     *  Similar to a username which is provided to the server to identify 
+     *  the connection/user. This value is used to let the server know which
+     *  client is disconnecting.
+     *  If the server does not implement identifiers, this value can be 
+     *  blank.
+     */
+    identifier: string;
 }
 ```
 

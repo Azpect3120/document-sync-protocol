@@ -1,14 +1,6 @@
 --- Imports
 local parser = require("docusync.parser.parser")
 
---- Capabilities class
---- @class Capabilities
---- @field document_sync integer
---- @field compression string | nil
---- @field identifiers boolean
---- @field cursor_sync integer
---- @field client_count boolean
-
 --- Sync document event class
 --- @class E_SyncDocument
 --- @field event string = "document/sync"
@@ -18,19 +10,8 @@ local parser = require("docusync.parser.parser")
 --- @field location integer | nil  -- This has not been constructed in my head yet
 --- @field time integer
 
---- Event parser class
---- @class Events
---- @field capabilities Capabilities
-local M = {
-  -- Default server capabilities (FIX: Decide what values to use)
-  capabilities = {
-    document_sync = 1000,
-    compression = nil,
-    identifiers = true,
-    cursor_sync = 1000,
-    client_count = true,
-  },
-}
+--- Event parser object
+local M = {}
 
 --- Parse events data
 --- @param server Server
@@ -44,9 +25,9 @@ function M.parse(server, data)
   -- Switch the event based on the type
   -- The entire data string is passed into the helper functions
   if event == "document/sync" then
-    parser.document_sync(data, M.capabilities)
+    parser.document_sync(data, server.capabilities)
   elseif event == "document/update" then
-    parser.document_update(server, data, M.capabilities)
+    parser.document_update(server, data, server.capabilities)
   else
     print("Unknown event: " .. event)
   end
@@ -55,15 +36,16 @@ end
 
 --- Construct sync document event.
 --- Called by the server to construct a sync document event to be sent to the client.
+--- @param server Server The server object
 --- @param partial boolean Is the content a partial or full document
 --- @param content table<string> The document content as lines
 --- @param document string The document name
 --- @param location table<integer> Should have to integers [ start_line, end_line ], it not a partial, use a blank table
 --- @param time integer The time the event was created
 --- @return string event The constructed event
-function M.construct_sync_document(partial, content, document, location, time)
+function M.construct_sync_document(server, partial, content, document, location, time)
   -- Check if document sync is supported
-  assert(M.capabilities.document_sync > 0, "Document sync is not supported")
+  assert(server.capabilities.document_sync > 0, "Document sync is not supported")
 
   -- TODO: Figure out how to use partial and location. That will be based on how I implement the neovim client 
 
@@ -83,6 +65,7 @@ end
 
 --- Construct update document event.
 --- Called by the client to construct an update document event to be sent to the server.
+--- @param server Server The server object
 --- @param partial boolean Is the content a partial or full document
 --- @param identifier string The client identifier:w
 --- @param content table<string> The document content as lines
@@ -90,9 +73,9 @@ end
 --- @param location table<integer> Should have to integers [ start_line, end_line ], it not a partial, use a blank table
 --- @param time integer The time the event was created
 --- @return string event The constructed event
-function M.construct_update_document(partial, identifier, content, document, location, time)
+function M.construct_update_document(server, partial, identifier, content, document, location, time)
   -- Check if document sync is supported
-  assert(M.capabilities.document_sync > 0, "Document sync is not supported")
+  assert(server.capabilities.document_sync > 0, "Document sync is not supported")
 
   -- TODO: Figure out how to use partial and location. That will be based on how I implement the neovim client 
 
@@ -106,6 +89,23 @@ function M.construct_update_document(partial, identifier, content, document, loc
     document = document,
     location = location,
     time = time,
+  })
+
+  return event
+end
+
+--- Construct server disconnect event.
+--- Called by the client before disconnecting to inform the server that a client has disconnected.
+--- @param identifier string The client's unique identifier
+--- @param host string The server host that the client is disconnecting from, must include port (host:port)
+--- @return string event The constructed event
+function M.construct_server_disconnect(identifier, host)
+  -- Construct event
+  -- TODO: Determine if I want to use json or nothing else
+  local event = vim.fn.json_encode({
+    event = "server/disconnect",
+    identifier = identifier,
+    host = host,
   })
 
   return event
