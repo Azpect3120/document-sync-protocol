@@ -15,15 +15,27 @@
 
 <br>
 
-## Events
+## <a id="TableOfContents">Table Of Contents</a>
+- [Events and Notifications](#EventsAndNotifications)
+  - [Start Server](#StartServer)
+  - [Connect to Server](#ConnectToServer)
+  - [Sync Document](#SyncDocument)
+  - [Update Document](#UpdateDocument)
+- [Server & Client Shared Types](#Server&ClientSharedTypes)
+  - [Server Capabilities](#ServerCapabilities)
 
-### [Start Server](#Start-Server)
+
+<br>
+
+## <a id="EventsAndNotifications">Events and Notifications</a>
+
+### <a id="StartServer">Start Server</a>
 
 Ran by the user who wishes to start a server. Senders file content will be updated by the connected users, assuming the server implements such capabilities.
 
 NOTE: `Event` is not really the right word to describe what this action. `Function` may be a better word to describe how this works. The server must first run a function that implements the following interface which will start up the server, then events can begin.
 
-### Event
+#### <a id="StartServer">Event</a>
 
 ```typescript
 interface StartServerEvent {
@@ -43,32 +55,32 @@ interface StartServerEvent {
     /**
      *  Define the capabilities the server will implement.
      *  If empty, the server will not implement any capabilities.
-     *  If not provided, the server will fail to start.
+     *  If not provided, the server will fail to start. If this 
+     *  value is null, the server will implement the default
+     *  capabilities, which can be found in the type definition.
      */
     capabilities: ServerCapabilities;
 
     /**
      *  Max number of clients that can connect to the server.
      *  Can be upgraded later to allow for more connections.
-     *  If not provided, the server will allow unlimited connections.
+     *  If not provided, the server will allow the default of
+     *  10 connections.
      */
-    maxConnections?: integer;
+    maxConnections: integer = 10;
 
     /**
      *  Password required to connect to the server.
-     *  If not provided, the server will not require a password.
+     *  If not value is null (""), the server will not require
+     *  a password.
      */
-    password?: string;
-
-    /**
-     *  Time in milliseconds before syncing the document.
-     *  If not provided, the server will sync the document every 1000ms.
-     */
-    timeout?: integer;
+    password: string;
 }
 ```
 
-### Response
+#### <a id="StartServerResponse">Response</a>
+
+This response should be returned by the `function` someway or another.
 
 ```typescript
 interface StartServerResponse {
@@ -91,13 +103,16 @@ interface StartServerResponse {
 }
 ```
 
-### [Connect to Server](#Connect-to-Server)
+<br>
 
-Ran by the user who wishes to connect to a running server. The callers files will remain unchanged until the connection is aborted.
+### <a id="ConnectToServer">Connect to Server</a>
 
-NOTE: `Event` is not really the right word to describe what this action. `Function` may be a better word to describe how this works. The client must first run a function that implements the following interface which will connect to a running server and then the client may begin listening to events and sending back data.
+Ran by the user who wishes to connect to a running server. The callers files will remain unchanged until the 
+connection is aborted. The client should connect to the server on the transport layer before emitting this event.
+The client is not considered *connected* until the server has received this connection event, regardless of the 
+transport layer connection status.
 
-### Event
+#### <a id="ConnectServerEvent">Event</a>
 
 ```typescript
 interface ConnectServerEvent {
@@ -122,21 +137,22 @@ interface ConnectServerEvent {
      *  to this identifier.
      *  If not provided, a random identifier will be generated and provided.
      *  If the server does not implement identifiers, this value can be 
-     *  omitted.
+     *  null ("").
      */
-    identifier?: string;
+    identifier: string;
 
     /**
      *  Password required to connect to the server.
-     *  If no password is required, this should be ommmitted.
-     *
-     *  !!! Should this be null or optional? 
+     *  If no password is required, this should be null ("").
      */
-    password?: string;
+    password: string;
 }
 ```
 
-### Response
+#### <a id="ConnectServerResponse">Response</a>
+
+This response will be sent to **only** the client who emitted the `ConnectServerEvent`.
+The [NewClientConnectionNotification](#NewClientConnectionNotification) will be emitted to all connected clients.
 
 ```typescript
 interface ConnectServerResponse {
@@ -147,16 +163,16 @@ interface ConnectServerResponse {
 
     /**
      *  Error returned if success is false.
-     *  If connection is successful, this will be null.
+     *  If connection is successful, this will be null ("").
      */
-    error: string | null;
+    error: string;
 
     /**
      *  Identifier provided in the request, unless it was not in which
      *  case this will be the randomly generated identifier.
-     *  If connection is unsuccessful, this will be null.
+     *  If connection is unsuccessful, this will be null ("").
      */
-    identifier: string | null;
+    identifier: string;
 
     /**
      *  Capabilities the server has implemented.
@@ -167,12 +183,49 @@ interface ConnectServerResponse {
 }
 ```
 
-### [Sync Document](#Sync-Document)
+#### <a id="NewClientConnectionNotification">Notification</a>
 
-Event is emitted by the server which sends back the document to each client. Client event is emitted by the client to the server. The time between syncs on the client side is determined by the client's implementation. The time between the syncs on the server side is determined by the server when it is spawned.
+Once the server has received the connection request, it will emit a notification to all connected clients that a new client has connected. The server will also send the new clients identifier to all connected clients.
+Assuming the server implements the capabilities for identifiers.
 
+```typescript
+interface NewClientConnectionNotification {
+    /**
+     *  Name of the notification being emitted.
+     *  Notication properties are unique and found in all notifications.
+     */
+    notification: string = "client/connect";
 
-### Event
+    /**
+     *  Status of the connection. If the client failed to connect, the 
+     *  server will let the other clients know through this property.
+     */
+    status: boolean;
+
+    /**
+     *  Identifier of the client who has connected, if server implements
+     *  identifiers. Otherwise the value will be null ("").
+     */
+    identifier: string;
+
+    /**
+     *  Timestamp of this notification.
+     *  Depending on the client implementation this can be used in the UI.
+     */
+    time: Date;
+}
+```
+
+<br>
+
+### <a id="SyncDocument">Sync Document</a>
+
+The `document/sync` event is emitted by the server to all connected clients.
+The server will send the updated document data to all connected clients.
+The clients will then update their document data with the new data provided by the server.
+
+#### <a id="SyncDocumentEvent">Event</a>
+
 ```typescript
 interface SyncDocumentEvent {
     /**
@@ -214,8 +267,9 @@ interface SyncDocumentEvent {
      *  can be omitted. But if it is a partial, the and this value is 
      *  omitted, the content will be ignored by the client until the next
      *  successful sync. An error here will result in an unsuccessful sync.
+     *  If partials are not being used, this value can be null ([0, 0]).
      */
-    location: integer[2] | null;
+    location: integer[2];
 
     /**
      *  Timestamp of this update.
@@ -224,16 +278,19 @@ interface SyncDocumentEvent {
     time: Date;
 }
 ```
-No response is expected from the client to the server upon emitting this event.
 
+<br>
 
-### [Update Document](#Update-Document)
+### <a id="UpdateDocument">Update Document</a>
 
-Event is emitted by the client to the server. The time between syncs on the client side is determined by the client's implementation. The action that triggers the event is also determined by the client's implementation.
+The `document/update` event is emitted by the client to the server. This event works in 
+a similar way to the `document/sync` event, but the client is the one who is updating the 
+document data. The server will then send the updated data to all connected clients. The 
+deeper implementation of this event is up to the server since all of the main handling is 
+done by the server.
 
-Client events can be emitted at any point but the server event will be emitted only when the timer has completed a full cycle. If the server sync timer is reduced the clients data will be updated quicker.
+#### <a id="UpdateDocumentEvent">Event</a>
 
-### Event
 ```typescript
 interface UpdateDocumentEvent {
     /**
@@ -246,9 +303,9 @@ interface UpdateDocumentEvent {
      *  identifier of the client who is sending this update to the server.
      *  This value is provided by the server when the client connects.
      *  If the server does not impliment identifiers, this value can be
-     *  omitted.
+     *  null ("").
      */
-    identifier: string | null;
+    identifier: string;
 
     /**
      *  Defines if the document provided a partial or an entire document.
@@ -281,11 +338,11 @@ interface UpdateDocumentEvent {
      *  end line.
      *  If the data being sent is not in a partial format then this value
      *  can be omitted. But if it is a partial, the and this value is 
-     *  omitted, the content will be ignored by the server until the next
-     *  successful update. An error here will result in an unsuccessful 
-     *  update.
+     *  omitted, the content will be ignored by the client until the next
+     *  successful sync. An error here will result in an unsuccessful sync.
+     *  If partials are not being used, this value can be null ([0, 0]).
      */
-    location: integer[2] | null;
+    location: integer[2];
 
     /**
      *  Timestamp of this update.
@@ -298,9 +355,9 @@ interface UpdateDocumentEvent {
 
 <br>
 
-## Types
+## <a id="Server&ClientSharedTypes">Server & Client Shared Types</a>
 
-### [Server Capabilities](#Server-Capabilities)
+### <a id="ServerCapabilities">Server Capabilities</a>
 
 Capabilities are features that the server can implement. They are defined by the server and can be used by the client. The client must also implement the capabilities to allow for the proper use of the server capabilities. 
 
@@ -312,33 +369,38 @@ interface ServerCapabilities {
      *  Value provided determines the time between each sync event in
      *  milliseconds.
      *  When 0, clients will be put into a read-only mode.
+     *  Default is 1000ms.
      */
-    document_sync: integer;
+    document_sync: integer = 1000;
 
     /**
      *  Should the server send and receive document data in a compressed
      *  format.
-     *  If this value is omitted, compression will not be supported.
+     *  If this value is null (""), compression will not be supported.
+     *  Default is "", which will not implement compression.
      */
-    compression: string = "LZMA" | "GZIP" | "DEFLATE" | "ZLIB" | null;
+    compression: string = "LZMA" | "GZIP" | "DEFLATE" | "ZLIB" | "" = "";
 
     /**
      *  Should the server display the users identifier in the document.
+     *  Default is true.
      */
-    identifiers: boolean;
+    identifiers: boolean = true;
 
     /**
      *  Should the server display the cursor of the users in the document.
      *  Value provided determines the time between each sync event in
      *  milliseconds.
      *  When 0, server will not accept the clients cursor location.
+     *  Default is 1000ms.
      */
-    cursor_sync: integer;
+    cursor_sync: integer = 1000;
 
     /**
      *  Should the server display the number of clients connected to 
      *  the server.
+     *  Default is true.
      */
-    client_count: boolean;
+    client_count: boolean = true;
 }
 ```
