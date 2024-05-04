@@ -158,6 +158,12 @@ The [NewClientConnectionNotification](#NewClientConnectionNotification) will be 
 ```typescript
 interface ConnectServerResponse {
     /**
+     *  Name of the response being emitted.
+     *  Response properties are unique and found in all responses.
+     */
+    response: string = "server/connect";
+
+    /**
      *  Status of the connection attempt.
      */
     success: boolean;
