@@ -13,6 +13,9 @@ function M.start_server(server)
   -- Nil check on the tcp object
   assert(server.tcp == nil, "Server is already running, Stop first.")
 
+  -- Ensure capabilities exist
+  server.capabilities = server.capabilities or require("docusync.capabilities").default()
+
   -- Create the tcp server
   server.tcp = uv.new_tcp()
 
@@ -52,11 +55,19 @@ end
 
 --- Stop a tcp server that is currently running.
 --- This will close all connections and stop the server.
---- @param server table The server object to stop.
+--- @param server Server The server object to stop.
 --- @return nil
 function M.stop_server(server)
   -- Nil check on the tcp object
   assert(server.tcp, "Server is not running, cannot stop.")
+
+  -- Generate a server/stop event
+  local event = require("docusync.server.events.constructor").events.server_stop(server.host, server.port)
+
+  -- Write the event to all connected clients
+  for _, connection in pairs(server.connections) do
+    connection:write(event, function(err) assert(not err, err) end)
+  end
 
   -- Shutdown/close the server and handle errors
   -- Schedule is used to ensure the server is killed at a valid time point in the event loop
@@ -67,8 +78,8 @@ function M.stop_server(server)
   end)
 
   -- Reset the connections table
-  -- TODO: EMIT SERVER STOPPED EVENT
   server.connections = {}
+  server.capabilities = nil
 
   -- Print the server has been stopped
   print("Server has been stopped.")

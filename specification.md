@@ -18,6 +18,7 @@
 ## <a id="TableOfContents">Table Of Contents</a>
 - [Events and Notifications](#EventsAndNotifications)
   - [Start Server](#StartServer)
+  - [Stop Server](#StopServer)
   - [Connect to Server](#ConnectToServer)
   - [Disconnect from Server](#DisconnectFromServer)
   - [Sync Document](#SyncDocument)
@@ -101,6 +102,37 @@ interface StartServerResponse {
      *  If server is started successfully, this will be null.
      */
     error: string | null;
+}
+```
+
+<br>
+
+### <a id="StopServer">Stop Server</a>
+
+Ran by the user who wishes to stop their running server. The server will no longer accept connections and the 
+connected clients will be disconnected. Any data that was not synced will be lost.
+
+#### <a id="StopServerEvent">Event</a>
+
+```typescript
+interface StopServerEvent {
+    /**
+     *  Name of the event being emitted.
+     *  Event properties are unique and found in all events.
+     */
+    event: string = "server/stop";
+
+    /**
+     *  Address to stop the server on.
+     *  Port should be provided as well.
+     */
+    host: string;
+
+    /**
+     *  Timestamp of this event.
+     *  Depending on the client implementation this can be used in the UI.
+     */
+    time: Date;
 }
 ```
 

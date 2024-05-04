@@ -47,7 +47,9 @@ return {
 
     -- Call appropriate event
     if type == "event" then
-      print("Event received: " .. decoded.event)
+      if decoded.event == "server/stop" then
+        events.server_stop(decoded, client)
+      end
 
     -- Call appropriate notification
     elseif type == "notification" then

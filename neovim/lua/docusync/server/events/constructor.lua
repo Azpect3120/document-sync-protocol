@@ -1,7 +1,26 @@
 -- This file contains all the constructors for the server sent events, responses and notifications.
 
 return {
-  events = {},
+  events = {
+    --- Ran by the user who wishes to stop their running server. The server will no longer 
+    --- accept connections and the connected clients will be disconnected. Any data that 
+    --- was not synced will be lost.
+    ---
+    --- This function will generate a server/stop event and return it as a JSON encoded string
+    --- which is emitted by the server to all connected clients before the server stops.
+    --- @param host string The host of the server
+    --- @param port number The port of the server
+    --- @return string
+    server_stop = function (host, port)
+      local event = vim.fn.json_encode({
+        event = "server/stop",
+        host = host .. ":" .. port,
+        time = os.time()
+      })
+      return event
+    end,
+
+  },
 
   responses = {
     --- This response will be sent to only the client who emitted the ConnectServerEvent.
