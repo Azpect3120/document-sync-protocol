@@ -13,3 +13,5 @@ the client to create a TCP connection to the server before actually connecting..
 event to the server. The server can then handle the event and do whatever it needs
 to do. For example, send a message to all the clients notifying them that a new client
 has connected.
+
+Last [commit](https://github.com/Azpect3120/document-sync-protocol/commit/31630b7ad19826ce8e07f4657b9215db4281e6a0) before refactor
