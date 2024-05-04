@@ -11,10 +11,18 @@ local capabilities = require("docusync.capabilities")
 ---@field server Server
 local M = {
   -- Default client values
-  client = { host = "127.0.0.1", port = 3270, tcp = nil, capabilities = nil },
+  client = { host = "127.0.0.1", port = 3270, tcp = nil, server_details = { identifier = "", password = "", capabilities = nil } },
   -- Default server values
   server = { host = "127.0.0.1", port = 3270, tcp = nil, capabilities = capabilities.default(), connections = {} },
 }
+
+function M.dump_server()
+  print(vim.inspect(M.server))
+end
+
+function M.dump_client()
+  print(vim.inspect(M.client))
+end
 
 --- Connect to a tcp server and store the connection on the client object.
 --- The host and port arguments can be blank to use the default values.

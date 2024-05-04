@@ -41,31 +41,50 @@ func main() {
 				log.Printf("Error reading data from connection: %s\n", err.Error())
 				return
 			}
-			log.Printf("[%s] %s", conn.RemoteAddr().String(), message)
+			fmt.Printf("%s\n", message)
 		}
 	}
 }
 
 func connectionWriteLoop(conn net.Conn, ch chan struct{}) {
-	// Write welcome message to client
-	num, err := conn.Write([]byte("Thank you!\n"))
-	if err != nil {
-		log.Printf("Error sending response message: %s\n", err.Error())
-		ch <- struct{}{}
-		return
-	}
+	var connect_event_1 string = `
+    {
+      "event": "server/connect",
+      "host": "127.0.0.1:3270",
+      "identifier": "Azpect",
+      "password": ""
+    }
+    `
 
-	// Print success to console
-	log.Printf("Sent response message(%d)\n", num)
+	var connect_event_2 string = `
+    {
+      "event": "server/connect",
+      "host": "127.0.0.1:32700",
+      "identifier": "CrookedShaft",
+      "password": ""
+    }
+    `
+
+	var sent bool = false
 
 	for {
 		time.Sleep(time.Second)
-		_, err := conn.Write([]byte(fmt.Sprintf("{}", time.Now().Unix())))
-		if err != nil {
-			log.Printf("Error sending data to server: %s\n", err.Error())
-			ch <- struct{}{}
-			return
+		if !sent {
+			_, err := conn.Write([]byte(connect_event_1))
+			if err != nil {
+				log.Printf("Error sending data to server: %s\n", err.Error())
+				ch <- struct{}{}
+				return
+			}
+		} else {
+			_, err := conn.Write([]byte(connect_event_2))
+			if err != nil {
+				log.Printf("Error sending data to server: %s\n", err.Error())
+				ch <- struct{}{}
+				return
+			}
 		}
+		sent = true
 	}
 
 }

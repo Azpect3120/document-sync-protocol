@@ -24,6 +24,22 @@ function M.connect(client)
 
     -- Construct and send a server connect event
     vim.schedule(function()
+      -- Construct event
+      local event = require("docusync.client.events.constructor").events.server_connect(
+        client.host,
+        client.port,
+        client.server_details.identifier,
+        client.server_details.password
+      )
+
+      -- Send event to server
+      if client.tcp:is_active() then
+        client.tcp:write(event, function(write_err)
+          assert(not write_err, write_err)
+        end)
+      else
+        error("Failed to send event to server, connection is not active.")
+      end
     end)
 
     -- Read incoming data from the server
@@ -33,13 +49,10 @@ function M.connect(client)
 
       -- Parse the event/notification
       vim.schedule(function()
-
+        require("docusync.client.events").parser.parse(client, chunk)
       end)
     end)
   end)
-
-  -- Print success message
-  print("Connected to server! (" .. client.host .. ":" .. client.port .. ")")
 end
 
 --- Disconnect from a tcp server and remove the connection from the client object.

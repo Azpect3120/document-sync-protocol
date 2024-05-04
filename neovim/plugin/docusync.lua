@@ -45,6 +45,24 @@ if not _G.myPluginLoaded then
     { nargs = 0 }
   )
 
+  -- Create a command to dump the DocuSync server data
+  vim.api.nvim_create_user_command(
+    "DocuSyncDumpServer",
+    function (_)
+      require("docusync").dump_server()
+    end,
+    { nargs = 0 }
+  )
+
+  -- Create a command to dump the DocuSync client data
+  vim.api.nvim_create_user_command(
+    "DocuSyncDumpClient",
+    function (_)
+      require("docusync").dump_client()
+    end,
+    { nargs = 0 }
+  )
+
   -- Ensure plugin is only loaded once
   _G.myPluginLoaded = true
 end

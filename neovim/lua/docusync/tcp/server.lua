@@ -1,7 +1,6 @@
 -- Imports
 local uv = vim.loop
 local tcp_util = require("docusync.tcp.util")
-local events = require("docusync.events")
 
 -- tcp.server module
 local M = {}
@@ -34,9 +33,6 @@ function M.start_server(server)
     -- Print the successful connection from a client
     print("Accepted connection(TCP) from " .. client:getpeername().ip .. ":" .. client:getpeername().port)
 
-    -- Add new client to the connections table on the server object
-    server.connections[#server.connections + 1] = client
-
     -- Read incoming data from the client
     tcp_util.connection_read_loop(client, function(read_err, chunk)
       -- Check for errors
@@ -44,6 +40,7 @@ function M.start_server(server)
 
       -- Parse the event/notification
       vim.schedule(function()
+        require("docusync.server.events").parser.parse(server, chunk, client)
       end)
 
     end)
