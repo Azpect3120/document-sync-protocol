@@ -257,6 +257,33 @@ interface DisconnectServerEvent {
 }
 ```
 
+#### <a id="DisconnectServerNotification">Notification</a>
+
+```typescript
+interface DisconnectServerEvent {
+    /**
+     *  Name of the notification being emitted.
+     *  Notication properties are unique and found in all notifications.
+     */
+    notification: string = "client/disconnect";
+
+    /**
+     *  Similar to a username which is provided to the server to identify 
+     *  the connection/user. This value is used to let the server know which
+     *  client is disconnecting.
+     *  If the server does not implement identifiers, this value can be 
+     *  blank.
+     */
+    identifier: string;
+
+    /**
+     *  Timestamp of this notification.
+     *  Depending on the client implementation this can be used in the UI.
+     */
+    time: Date;
+}
+```
+
 <br>
 
 ### <a id="SyncDocument">Sync Document</a>
