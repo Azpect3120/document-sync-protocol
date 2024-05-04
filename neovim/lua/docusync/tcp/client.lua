@@ -1,7 +1,6 @@
 -- Imports
 local uv = vim.loop
 local tcp_util = require("docusync.tcp.util")
-local events = require("docusync.events")
 
 -- tcp.client module
 local M = {}
@@ -10,9 +9,8 @@ local M = {}
 --- The client object should have a defined host and port otherwise this 
 --- function will throw an error.
 --- @param client Client The client to establish the connection onto
---- @param server Server The server data object from the main module  THIS IS TEMPORARY
 --- @return nil
-function M.connect(client, server)
+function M.connect(client)
   -- Create TCP objects on the connection field
   client.tcp = uv.new_tcp()
 
@@ -26,8 +24,6 @@ function M.connect(client, server)
 
     -- Construct and send a server connect event
     vim.schedule(function()
-      local event = events.constructor.events.server_connect(client.host, client.port, "Azpect", "")
-      client.tcp:write(event, function (write_err) assert(not write_err, write_err) end)
     end)
 
     -- Read incoming data from the server
@@ -35,11 +31,9 @@ function M.connect(client, server)
       -- Check for errors
       assert(not read_err, read_err)
 
-      -- Print the data
+      -- Parse the event/notification
       vim.schedule(function()
-        if ((not events.parser.parse_event(chunk, client, server)) and (not events.parser.parse_notification(chunk)) and (not events.parser.parse_response(chunk))) then
-          print("Failed to parse chunk: " .. "\"" .. chunk .. "\"")
-        end
+
       end)
     end)
   end)

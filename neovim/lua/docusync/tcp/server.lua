@@ -9,9 +9,8 @@ local M = {}
 --- Start a tcp server that will listen for incoming connections.
 --- The server object will be stored on the server object.
 --- @param server Server The server object to start.
---- @param client Client The server data object from the main module  THIS IS TEMPORARY
 --- @return nil
-function M.start_server(server, client)
+function M.start_server(server)
   -- Nil check on the tcp object
   assert(server.tcp == nil, "Server is already running, Stop first.")
 
@@ -43,11 +42,8 @@ function M.start_server(server, client)
       -- Check for errors
       assert(not read_err, read_err)
 
-      -- Print the data
+      -- Parse the event/notification
       vim.schedule(function()
-        if ((not events.parser.parse_event(chunk, client, server)) and (not events.parser.parse_notification(chunk)) and (not events.parser.parse_response(chunk))) then
-          print("Failed to parse chunk: " .. "\"" .. chunk .. "\"")
-        end
       end)
 
     end)

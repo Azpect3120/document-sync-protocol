@@ -29,7 +29,7 @@ function M.connect(host, port)
   assert(M.client.tcp == nil, "Already connected to a server, Disconnect first.")
 
   -- Connect to the server
-  tcp.client.connect(M.client, M.server)
+  tcp.client.connect(M.client)
 end
 
 --- Disconnect from a tcp server and remove the connection from the client object.
@@ -55,9 +55,10 @@ function M.start_server(host, port)
   assert(M.client.tcp == nil, "Server is already running, Stop the server first.")
 
   -- TODO: Implement the server capabilities
+  M.server.capabilities = capabilities.default() -- or capabilities.new(...)
 
   -- Start the server
-  tcp.server.start_server(M.server, M.client)
+  tcp.server.start_server(M.server)
 end
 
 --- Stop a tcp server and remove the connection from the server object.
