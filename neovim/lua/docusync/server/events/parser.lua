@@ -28,26 +28,37 @@ return {
     -- Decode the data and handle any errors.
     local status, res = pcall(vim.fn.json_decode, data)
     if not status then
-      return print("Error parsing provided data: " .. res)
+      -- print("Error parsing provided data: " .. res)
+      return
     end
 
     -- Store decoded data in a local variable
     local decoded = res
-    if not decoded then
-      return print("Error parsing provided data: " .. res)
-    end
+
+    -- If the data is nil, return
+    if not decoded then return end
 
     -- Check if the data is an event, notification or response
     local type = get_type(decoded)
     if not type then
-      return print("Error parsing provided data: " .. res)
+      return print("Invalid message type provided!")
     end
 
     -- Call appropriate event
     if type == "event" then
       if decoded.event == "server/connect" then
         events.server_connect(server, decoded, conn)
+      elseif decoded.event == "server/disconnect" then
+        events.server_disconnect(server, decoded)
       end
+
+    -- Call appropriate notification
+    elseif type == "notification" then
+      print("Notification received: " .. decoded.notification)
+
+    -- Call appropriate response
+    elseif type == "response" then
+      print("Response received: " .. decoded.response)
     end
   end
 }

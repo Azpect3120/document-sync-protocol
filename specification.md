@@ -259,8 +259,12 @@ interface DisconnectServerEvent {
 
 #### <a id="DisconnectServerNotification">Notification</a>
 
+This notification is emitted by the server to all connected clients when a client has disconnected. It 
+will also send the disconnected clients identifier to all connected clients. Assuming the server implements
+the capabilities for identifiers.
+
 ```typescript
-interface DisconnectServerEvent {
+interface DisconnectServerNotification {
     /**
      *  Name of the notification being emitted.
      *  Notication properties are unique and found in all notifications.

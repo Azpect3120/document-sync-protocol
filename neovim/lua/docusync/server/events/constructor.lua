@@ -32,7 +32,7 @@ return {
     --- send the new clients identifier to all connected clients. Assuming the server
     --- implements the capabilities for identifiers.
     ---
-    --- This fucntion will generate a NewClientConnectionNotification object and return
+    --- This function will generate a NewClientConnectionNotification object and return
     --- it as a JSON encoded string which is emitted to all connected clients, expect
     --- the new client that has connected to the server.
     --- @param status boolean The status of the new connection
@@ -42,6 +42,24 @@ return {
       local notification = vim.fn.json_encode({
         notification = "client/connect",
         status = status,
+        identifier = identifier,
+        time = os.time()
+      })
+      return notification
+    end,
+
+    --- Once the server has received the connection request, it will emit a notification
+    --- to all connected clients that a new client has connected. The server will also
+    --- send the new clients identifier to all connected clients. Assuming the server
+    --- implements the capabilities for identifiers.
+    ---
+    --- This function will generate a NewClientDisconnectionNotification object and return
+    --- it as a JSON encoded string which is emitted to all connected clients, expect
+    --- the client that has disconnected from the server.
+    --- @param identifier string The identifier of the client that has disconnected
+    client_disconnect = function(identifier)
+      local notification = vim.fn.json_encode({
+        notification = "client/disconnect",
         identifier = identifier,
         time = os.time()
       })

@@ -6,7 +6,7 @@ local tcp_util = require("docusync.tcp.util")
 local M = {}
 
 --- Connect to a tcp server and store the connection on the client object.
---- The client object should have a defined host and port otherwise this 
+--- The client object should have a defined host and port otherwise this
 --- function will throw an error.
 --- @param client Client The client to establish the connection onto
 --- @return nil
@@ -18,7 +18,7 @@ function M.connect(client)
   assert(client.tcp, "Error creating TCP object")
 
   -- Attempt to connect
-  client.tcp:connect(client.host, client.port, function (err)
+  client.tcp:connect(client.host, client.port, function(err)
     -- Check for errors
     assert(not err, err)
 
@@ -66,9 +66,30 @@ function M.disconnect(client)
   -- Close, shutdown and reset the connection
   -- Schedule is used to ensure the connection is killed at a valid time point in the event loop
   vim.schedule(function()
-    client.tcp:close(function (err) assert(not err, err)end)
+    -- Construct a server/disconnect event before shutting down TCP connection
+    local event = require("docusync.client.events.constructor").events.server_disconnect(
+      client.host,
+      client.port,
+      client.server_details.identifier
+    )
+
+    -- Send event to server
+    if client.tcp:is_active() then
+      client.tcp:write(event, function(write_err)
+        assert(not write_err, write_err)
+      end)
+    else
+      error("Failed to send event to server, connection is not active.")
+    end
+
+    -- Shutdown TCP connection
+    client.tcp:close(function(err) assert(not err, err) end)
     client.tcp:shutdown(function(err) assert(not err, err) end)
+
+    -- Null the client object fields
     client.tcp = nil
+    client.server_details.identifier = ""
+    client.server_details.capabilities = nil
   end)
 
   -- Print success message

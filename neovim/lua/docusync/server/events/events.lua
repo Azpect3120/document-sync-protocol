@@ -13,6 +13,15 @@ return {
   --- connection event, regardless of the transport layer connection
   --- status.
   ---
+  --- This function is responsible for handling the server/connect event.
+  --- It will generate an identifier if one is not provided and ensure 
+  --- the host matches the server's host and port. If the host does not 
+  --- match, an error response will be generated and sent to the client.
+  --- If the password does not match, an error response will be generated
+  --- and sent to the client. If the host and password match, a success
+  --- response will be generated and sent to the client. A client/connect
+  --- notification will be generated and sent to all other clients on the
+  --- server. The new client will be added to the server's connection table.
   --- @param server Server The server object
   --- @param event table The event data
   --- @param client uv_tcp_t The client connection object that was created
@@ -87,5 +96,33 @@ return {
 
     -- Print success message on server
     print(event.identifier .. " has connected to the server!")
+  end,
+
+  --- Ran by the user who wishes to disconnect from the server. The callers 
+  --- files will remain unchanged until the connection is re-established. 
+  --- The connection is expected to be closed once this event is emitted, 
+  --- hence, no response is expected.
+  ---
+  --- This function is responsible for handling the server/disconnect event.
+  --- It will remove the client from the server's connection table and send
+  --- a client/disconnect notification to all other clients on the server.
+  --- @param server Server The server object
+  --- @param event table The event data
+  server_disconnect = function(server, event)
+    -- Remove the client from the server's connection table
+    server.connections[event.identifier] = nil
+
+    -- Generate client/disconnect notification
+    local notification = constructor.notifications.client_disconnect(event.identifier)
+
+    -- Send the client/disconnect notification to all other clients on the server
+    for _, connection in pairs(server.connections) do
+      connection:write(notification, function(write_err)
+        if write_err then error("Error writing notification to client: " .. write_err) end
+      end)
+    end
+
+    -- Print success message on server
+    print(event.identifier .. " has disconnected from the server!")
   end,
 }

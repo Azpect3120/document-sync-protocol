@@ -25,6 +25,30 @@ return {
       })
       return event
     end,
+
+    --- Ran by the user who wishes to disconnect from the server. The callers 
+    --- files will remain unchanged until the connection is re-established. The 
+    --- connection is expected to be closed once this event is emitted, hence,
+    --- no response is expected. 
+    ---
+    --- This function will construct a server/disconnect event which the client will
+    --- send to the server when the user wishes to disconnect from the server. This
+    --- event should be emitted before the transport layer connection is closed, to 
+    --- inform the server that the client is disconnecting.
+    --- @param host string The host of the server to disconnect from
+    --- @param port number The port of the server to disconnect from
+    --- @param identifier string The identifier of the client
+    --- @return string
+    server_disconnect = function(host, port, identifier)
+      local event = vim.fn.json_encode({
+        event = "server/disconnect",
+        host = host .. ":" .. port,
+        identifier = identifier,
+      })
+      return event
+    end,
+
+
   },
   responses = {},
   notifications = {},
