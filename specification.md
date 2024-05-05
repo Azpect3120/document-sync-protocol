@@ -483,7 +483,7 @@ interface ServerCapabilities {
      *  If this value is null (""), compression will not be supported.
      *  Default is "", which will not implement compression.
      */
-    compression: string = "LZMA" | "GZIP" | "DEFLATE" | "ZLIB" | "" = "";
+    compression: string = "LZMA" | "GZIP" | "DEFLATE" | "ZLIB" | "";
 
     /**
      *  Should the server display the users identifier in the document.
