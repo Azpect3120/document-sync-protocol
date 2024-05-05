@@ -481,9 +481,11 @@ interface ServerCapabilities {
      *  Should the server send and receive document data in a compressed
      *  format.
      *  If this value is null (""), compression will not be supported.
+     *  Values can be "LZMA", "GZIP", "DEFLATE", "ZLIB", or any other 
+     *  algorithm that the server and client both support.
      *  Default is "", which will not implement compression.
      */
-    compression: string = "LZMA" | "GZIP" | "DEFLATE" | "ZLIB" | "";
+    compression: string = "";
 
     /**
      *  Should the server display the users identifier in the document.
