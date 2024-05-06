@@ -63,6 +63,15 @@ if not _G.myPluginLoaded then
     { nargs = 0 }
   )
 
+  -- Create a command to run the DocuSync test suite
+  vim.api.nvim_create_user_command(
+    "DocuSyncTestSuite",
+    function (_)
+      require("docusync").test_suite()
+    end,
+    { nargs = 0 }
+  )
+
   -- Ensure plugin is only loaded once
   _G.myPluginLoaded = true
 end

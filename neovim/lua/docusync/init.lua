@@ -1,4 +1,3 @@
--- This is the main plugin module.
 -- All state should start and end here!
 
 -- Package imports
@@ -15,6 +14,55 @@ local M = {
   -- Default server values
   server = { host = "127.0.0.1", port = 3270, tcp = nil, capabilities = capabilities.default(), connections = {} },
 }
+
+function M.test_suite()
+  local cur_bufnr = vim.api.nvim_get_current_buf()
+  local spawned_bufnr = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_option(spawned_bufnr, "buftype", "nofile")
+
+  local cur_win = vim.api.nvim_get_current_win()
+  vim.api.nvim_command("botright vnew")
+
+  local spawned_win = vim.api.nvim_get_current_win()
+  vim.api.nvim_win_set_buf(spawned_win, spawned_bufnr)
+
+  vim.api.nvim_set_current_win(cur_win)
+
+  local cur_lines = vim.api.nvim_buf_get_lines(cur_bufnr, 0, -1, false)
+  vim.api.nvim_buf_set_lines(spawned_bufnr, 0, -1, false, cur_lines)
+
+
+  local last_lines = vim.api.nvim_buf_get_lines(cur_bufnr, 0, -1, false)
+
+  vim.api.nvim_buf_attach(cur_bufnr, false, {
+    -- on_bytes = function(bytes, buffer, change_tick, start_row, star_col, byte_offset, old_end_row, old_end_byte_length, new_end_row, new_end_col, new_end_byte_length)
+
+    on_bytes = function()
+      local new_lines = vim.api.nvim_buf_get_lines(cur_bufnr, 0, -1, false)
+
+      for i, line in ipairs(new_lines) do
+        if last_lines[i] ~= line then
+          vim.schedule(function()
+            vim.api.nvim_buf_set_lines(spawned_bufnr, i - 1, i, false, { line })
+          end)
+        elseif last_lines[i] == nil then
+          vim.schedule(function()
+            vim.api.nvim_buf_set_lines(spawned_bufnr, i - 1, i, false, { "" })
+          end)
+        end
+      end
+
+      if #new_lines < #last_lines then
+        vim.schedule(function()
+          vim.api.nvim_buf_set_lines(spawned_bufnr, #new_lines, -1, false, {})
+        end)
+      end
+
+      last_lines = new_lines
+    end,
+  })
+
+end
 
 function M.dump_server()
   print(vim.inspect(M.server))
