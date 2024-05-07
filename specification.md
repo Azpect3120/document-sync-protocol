@@ -324,11 +324,15 @@ interface DisconnectServerNotification {
 
 ### <a id="SyncDocument">Sync Document</a>
 
-The `document/sync` event is emitted by the server to all connected clients.
-The server will send the updated document data to all connected clients.
-The clients will then update their document data with the new data provided by the server.
-
 #### <a id="SyncDocumentEvent">Event</a>
+
+The `document/sync` event is emitted by the server whenever a client updates the document. The server will then
+send the updated document to all connected clients. The client will then update their document with the new content.
+The server will also send the updated document to the client who emitted the `document/update` event. This is to 
+ensure that the client has the most up-to-date document content. The files content should be in a line-by-line format.
+The client will handle the data by ["diffing"](https://neovim.io/doc/user/lua.html#vim.diff) each line and updating
+the clients page with the new content. This event works together with the `document/update` event to keep all the client
+and the server in sync.
 
 ```typescript
 interface SyncDocumentEvent {
@@ -339,41 +343,18 @@ interface SyncDocumentEvent {
     event: string = "document/sync";
 
     /**
-     *  Defines if the document provided a partial or an entire document.
-     *  If false, the clients entire document can be overwritten by the 
-     *  new data.
-     */ 
-    partial: boolean;
-
-    /**
-     *  Synced document data. 
-     *  Compression algorithms can be used but only if both the client and 
-     *  server support the implementation, which is defined in the server 
-     *  capabilities.
-     *  If a partial is provided the location property should be used by 
-     *  the client to determine the location to swap the data into.
+     *  The content of the document that the client is sending to the server.
+     *  This content should be the entire document, not just the changes.
+     *  It should be in a line-by-line format.
      */
     content: string[];
 
     /**
-     *  Name of the document that is being synced.
-     *  When multi-file support is implemented this will be a bigger deal
-     *  but for the time being it is just used to ensure the right document
-     *  is being sent and received.
+     *  The name of the document that the client is sending to the server.
+     *  This is relative to the server and can be used to identify the document
+     *  when more than one document is being synced and updated.
      */
     document: string;
-
-    /**
-     *  The array if values will contain line numbers, the first index 
-     *  value will define the start line and the second will define the
-     *  end line.
-     *  If the data being sent is not in a partial format then this value
-     *  can be omitted. But if it is a partial, the and this value is 
-     *  omitted, the content will be ignored by the client until the next
-     *  successful sync. An error here will result in an unsuccessful sync.
-     *  If partials are not being used, this value can be null ([0, 0]).
-     */
-    location: integer[2];
 
     /**
      *  Timestamp of this update.
@@ -387,11 +368,12 @@ interface SyncDocumentEvent {
 
 ### <a id="UpdateDocument">Update Document</a>
 
-The `document/update` event is emitted by the client to the server. This event works in 
-a similar way to the `document/sync` event, but the client is the one who is updating the 
-document data. The server will then send the updated data to all connected clients. The 
-deeper implementation of this event is up to the server since all of the main handling is 
-done by the server.
+The `document/update` event is emitted by the client whenever a client updates the document.
+The exact action that is required before emitting this event can vary depending on the client implementation.
+But the client should send the entire document content to the server when emitting this event. The server will
+then handle this data by ["diffing"](https://neovim.io/doc/user/lua.html#vim.diff) each line and updating the 
+servers page with the new content. The server will then emit the `document/sync` event to all connected clients, 
+which works basically the same way but with the roles reversed.
 
 #### <a id="UpdateDocumentEvent">Event</a>
 
@@ -412,41 +394,18 @@ interface UpdateDocumentEvent {
     identifier: string;
 
     /**
-     *  Defines if the document provided a partial or an entire document.
-     *  If false, the servers entire document can be overwritten by the 
-     *  new data.
-     */ 
-    partial: boolean;
-
-    /**
-     *  Updated document data. 
-     *  Compression algorithms can be used but only if both the client and 
-     *  server support the implementation, which is defined in the server 
-     *  capabilities.
-     *  If a partial is provided the location property should be used by 
-     *  the client to determine the location to swap the data into.
+     *  The content of the document that the client is sending to the server.
+     *  This content should be the entire document, not just the changes.
+     *  It should be in a line-by-line format.
      */
     content: string[];
 
     /**
-     *  Name of the document that is being updated.
-     *  When multi-file support is implemented this will be a bigger deal
-     *  but for the time being it is just used to ensure the right document
-     *  is being sent and received.
+     *  The name of the document that the client is sending to the server.
+     *  This is relative to the server and can be used to identify the document
+     *  when more than one document is being synced and updated.
      */
     document: string;
-
-    /**
-     *  The array if values will contain line numbers, the first index 
-     *  value will define the start line and the second will define the
-     *  end line.
-     *  If the data being sent is not in a partial format then this value
-     *  can be omitted. But if it is a partial, the and this value is 
-     *  omitted, the content will be ignored by the client until the next
-     *  successful sync. An error here will result in an unsuccessful sync.
-     *  If partials are not being used, this value can be null ([0, 0]).
-     */
-    location: integer[2];
 
     /**
      *  Timestamp of this update.
