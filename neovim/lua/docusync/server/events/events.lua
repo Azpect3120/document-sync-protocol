@@ -57,10 +57,12 @@ return {
 
       -- Send the new client notification to all other clients
       for identifier, connection in pairs(server.connections) do
-        if identifier ~= event.identifier then
-          connection:write(notification, function(write_err)
-            if write_err then error("Error writing notification to client: " .. write_err) end
-          end)
+        if connection:is_active() then
+          if identifier ~= event.identifier then
+            connection:write(notification, function(write_err) assert(not write_err, write_err) end)
+          else
+            server.connections[connection] = nil
+          end
         end
       end
 
@@ -76,21 +78,19 @@ return {
 
     -- Send response to the client with the server details and its identifier
     local response = constructor.responses.server_connect(server, true, "", event.identifier)
-    client:write(response, function(write_err)
-      if write_err then
-        error("Error writing response to client: " .. write_err)
-      end
-    end)
+    client:write(response, function(write_err) assert(not write_err, write_err) end)
 
     -- Generate client/connect notification
     local notification = constructor.notifications.client_connect(true, event.identifier)
 
     -- Send the new client notification to all other clients
     for identifier, connection in pairs(server.connections) do
-      if identifier ~= event.identifier then
-        connection:write(notification, function(write_err)
-          if write_err then error("Error writing notification to client: " .. write_err) end
-        end)
+      if connection:is_active() then
+        if identifier ~= event.identifier then
+          connection:write(notification, function(write_err) assert(not write_err, write_err) end)
+        else
+          server.connections[connection] = nil
+        end
       end
     end
 
@@ -118,9 +118,11 @@ return {
 
     -- Send the client/disconnect notification to all other clients on the server
     for _, connection in pairs(server.connections) do
-      connection:write(notification, function(write_err)
-        if write_err then error("Error writing notification to client: " .. write_err) end
-      end)
+      if connection:is_active() then
+        connection:write(notification, function(write_err) assert(not write_err, write_err) end)
+      else
+        server.connections[connection] = nil
+      end
     end
 
     -- Print success message on server
@@ -151,9 +153,6 @@ return {
     client:write(response, function(write_err)
       if write_err then error("Error writing response to client: " .. write_err) end
     end)
-
-    -- Print message on server
-    print("Sent document list to " .. event.identifier .. "!")
   end,
 
   --- The `document/open` event is emitted by the client whenever a document is opened by the client. The server will then

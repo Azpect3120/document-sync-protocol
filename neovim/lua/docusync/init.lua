@@ -95,10 +95,14 @@ function M.test_suite()
   })
 end
 
+--- Testing function used to dump the data stored in the server object.
+--- @return nil
 function M.dump_server()
   print(vim.inspect(M.server))
 end
 
+--- Testing function used to dump the data stored in the client object.
+--- @return nil
 function M.dump_client()
   print(vim.inspect(M.client))
 end
