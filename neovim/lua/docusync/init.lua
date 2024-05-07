@@ -10,19 +10,12 @@ local capabilities = require("docusync.capabilities")
 ---@field server Server
 local M = {
   -- Default client values
-  client = { host = "127.0.0.1", port = 3270, tcp = nil, server_details = { identifier = "", password = "", capabilities = nil } },
+  client = { host = "127.0.0.1", port = 3270, tcp = nil, server_details = {identifier = "", password = "", capabilities = nil, buffers = {}} },
   -- Default server values
   server = { host = "127.0.0.1", port = 3270, tcp = nil, capabilities = capabilities.default(), connections = {}, data = { buffers = {} } },
 }
 
 function M.test_suite()
-  local event = require("docusync.client.events.constructor").events.document_list(M.client.server_details.identifier)
-  M.client.tcp:write(event, function(err)
-    assert(not err, err)
-  end)
-end
-
-function M.test_suite_doc()
   local cur_bufnr = vim.api.nvim_get_current_buf()
   local spawned_bufnr = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_option(spawned_bufnr, "buftype", "nofile")
@@ -163,6 +156,24 @@ function M.stop_server()
 
   -- Stop the server
   tcp.server.stop_server(M.server)
+end
+
+--- Get the list of open documents from the server.
+--- This will send a request to the server to get the list of open documents.
+--- The server will respond with a list of open documents which triggers a 
+--- telescope picker to display the list.
+--- @return nil
+function M.document_list()
+  -- Ensure the client is connected to a server
+  assert(M.client.tcp, "Client is not connected to a server, cannot get document list.")
+
+  -- Create the event to get the list of open documents
+  local event = require("docusync.client.events.constructor").events.document_list(M.client.server_details.identifier)
+
+  -- Send the event to the server
+  M.client.tcp:write(event, function(err)
+    assert(not err, err)
+  end)
 end
 
 return M

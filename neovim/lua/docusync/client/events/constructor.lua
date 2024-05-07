@@ -53,7 +53,7 @@ return {
     --- The server will then send a list of the open documents to the client. The name of the document is the path of the document
     --- relative to the root in which Neovim was opened in.
     ---
-    --- This function will construct a document/list event which the client will send to the server when the client needs a list 
+    --- This function will construct a document/list event which the client will send to the server when the client needs a list
     --- of the open documents. Closed documents will NOT be included in the list.
     --- @param identifier string The identifier of the client
     --- @return string
@@ -61,6 +61,25 @@ return {
       local event = vim.fn.json_encode({
         event = "document/list",
         identifier = identifier
+      })
+      return event
+    end,
+
+
+    --- The `document/open` event is emitted by the client whenever a document is opened by the client. The server will then
+    --- send back the content of the document to the client. The name of the document is the path of the document relative to
+    --- the root in which Neovim was opened in. The content will be sent back to the client in a line-by-line format.
+    ---
+    --- This function will construct a document/open event which the client will send to the server when the client opens a document.
+    --- @param identifier string The identifier of the client
+    --- @param document string The name of the document
+    --- @return string
+    document_open = function(identifier, document)
+      local event = vim.fn.json_encode({
+        event = "document/open",
+        identifier = identifier,
+        document = document,
+        time = os.time(),
       })
       return event
     end,

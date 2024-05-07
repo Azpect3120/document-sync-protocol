@@ -1,10 +1,11 @@
 --- @class Client
---- @field host string
---- @field port number
---- @field tcp uv_tcp_t | nil
---- @field server_details ServerDetails | nil
+--- @field host string The host the client is connected to.
+--- @field port number The port the client is connected to.
+--- @field tcp uv_tcp_t | nil The TCP handle for the client.
+--- @field server_details ServerDetails | nil The details of the server the client is connected to.
 
 --- @class ServerDetails
---- @field identifier string
---- @field password string
---- @field capabilities Capabilities | nil
+--- @field identifier string The identifier of the client on the connected server.
+--- @field password string The password of the server, if required.
+--- @field capabilities Capabilities | nil  The capabilities of the server.
+--- @field buffers table<string, number> A table of buffers that are active on the server. The key is the buffer's file name and the value is the buffer number.

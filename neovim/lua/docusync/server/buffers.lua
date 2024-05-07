@@ -15,17 +15,26 @@ function M.listen(server)
     callback = function(event)
       -- Add buffer to the server data
       local bufnr = event.buf
-      local bufname = vim.fn.expand("%", true)
-      if (not string.sub(bufname, 1, 7) ~= "oil:///") then
-        server.data.buffers[bufname] = bufnr
+      local cwd = vim.loop.cwd()
+      local bufname_long = vim.api.nvim_buf_get_name(bufnr)
+
+      -- Ignore oil buffers
+      if (string.sub(bufname_long, 1, 7) == "oil:///") then
+        return
       end
 
-      -- Create document/open event
-      local event = require("docusync.server.events.constructor").events.document_open(bufname)
+      -- Get the buffer name relative to the current working directory
+      local bufname = string.sub(bufname_long, #cwd + 2, #bufname_long)
+
+      -- Add the buffer to the server data
+      server.data.buffers[bufname] = bufnr
+
+      -- Create document/open notification
+      local notification = require("docusync.server.events.constructor").notifications.document_open(bufname)
 
       -- Write the event to all connected clients
       for _, connection in pairs(server.connections) do
-        connection:write(event, function(err) assert(not err, err) end)
+        connection:write(notification, function(err) assert(not err, err) end)
       end
     end
   })
@@ -34,16 +43,28 @@ function M.listen(server)
   vim.api.nvim_create_autocmd("BufDelete", {
     group = vim.api.nvim_create_augroup("DocuSyncBufferListener_delete", { clear = true }),
     pattern = "*",
-    callback = function()
-      local bufname = vim.fn.expand("%", true)
+    callback = function(event)
+      local bufnr = event.buf
+      local cwd = vim.loop.cwd()
+      local bufname_long = vim.api.nvim_buf_get_name(bufnr)
+
+      -- Ignore oil buffers
+      if (string.sub(bufname_long, 1, 7) == "oil:///") then
+        return
+      end
+
+      -- Get the buffer name relative to the current working directory
+      local bufname = string.sub(bufname_long, #cwd + 2, #bufname_long)
+
+      -- Remove the buffer from the server data
       server.data.buffers[bufname] = nil
 
       -- Create document/close event
-      local event = require("docusync.server.events.constructor").events.document_close(bufname)
+      local notification = require("docusync.server.events.constructor").notifications.document_close(bufname)
 
       -- Write the event to all connected clients
       for _, connection in pairs(server.connections) do
-        connection:write(event, function(err) assert(not err, err) end)
+        connection:write(notification, function(err) assert(not err, err) end)
       end
     end
   })

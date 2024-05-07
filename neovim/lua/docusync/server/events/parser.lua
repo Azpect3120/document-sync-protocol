@@ -52,6 +52,8 @@ return {
         events.server_disconnect(server, decoded)
       elseif decoded.event == "document/list" then
         events.document_list(server, decoded, conn)
+      elseif decoded.event == "document/open" then
+        events.document_open(server, decoded, conn)
       else
         print("Event: " .. decoded.event .. " not implemented!")
       end
