@@ -66,9 +66,13 @@ function M.stop_server(server)
   -- Generate a server/stop event
   local event = require("docusync.server.events.constructor").events.server_stop(server.host, server.port)
 
-  -- Write the event to all connected clients
+  -- Write the event to all connected clients and disconnect any inactive connections
   for _, connection in pairs(server.connections) do
-    connection:write(event, function(err) assert(not err, err) end)
+    if connection:is_active() then
+      connection:write(event, function(err) assert(not err, err) end)
+    else
+      server.connections[connection] = nil
+    end
   end
 
   -- Shutdown/close the server and handle errors

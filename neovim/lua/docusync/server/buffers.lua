@@ -32,9 +32,13 @@ function M.listen(server)
       -- Create document/open notification
       local notification = require("docusync.server.events.constructor").notifications.document_open(bufname)
 
-      -- Write the event to all connected clients
+      -- Write the event to all connected clients and disconnect any inactive connections
       for _, connection in pairs(server.connections) do
-        connection:write(notification, function(err) assert(not err, err) end)
+        if connection:is_active() then
+          connection:write(notification, function(err) assert(not err, err) end)
+        else
+          server.connections[connection] = nil
+        end
       end
     end
   })
@@ -64,7 +68,11 @@ function M.listen(server)
 
       -- Write the event to all connected clients
       for _, connection in pairs(server.connections) do
-        connection:write(notification, function(err) assert(not err, err) end)
+        if connection:is_active() then
+          connection:write(notification, function(err) assert(not err, err) end)
+        else
+          server.connections[connection] = nil
+        end
       end
     end
   })
@@ -89,6 +97,20 @@ function M.listen(server)
     end
   })
 end
+
+ --   Error executing luv callback: 
+ -- ...Protocol/new_arch/neovim/lua/docusync/server/buffers.lua:37: EPIPE 
+ -- stack traceback: 
+ -- [C]: in function 'assert' 
+ -- ...Protocol/new_arch/neovim/lua/docusync/server/buffers.lua:37: in function <.. 
+ -- ..Protocol/new_arch/neovim/lua/docusync/server/buffers.lua:37> 
+ -- [C]: at 0x562d736e2450 
+ -- [C]: in function 'pcall' 
+ -- .../azpect/.local/share/nvim/lazy/oil.nvim/lua/oil/init.lua:692: in function 'c 
+ -- callback' 
+ -- ...ocal/share/nvim/lazy/oil.nvim/lua/oil/adapters/files.lua:257: in function '' 
+ -- ' 
+ -- vim/_editor.lua: in function <vim/_editor.lua:0> 
 
 -- Return the module
 return M

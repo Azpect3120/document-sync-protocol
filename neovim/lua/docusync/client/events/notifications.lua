@@ -43,8 +43,8 @@ return {
   --- @param client Client The client object
   --- @return nil
   document_open = function(event, client)
-    local _ = client
-    print("A new document was opened: " .. event.document)
+    local _, _ = client, event
+    print("A document was added to the list!")
   end,
 
   --- The `document/close` notification is emitted by the server whenever a new document is closed. The server will then stop
@@ -58,7 +58,7 @@ return {
   --- @param client Client The client object
   --- @return nil
   document_close = function(event, client)
-    local _ = client
-    print("A document was closed: " .. event.document)
+    local _, _ = client, event
+    print("A document was removed from the list!")
   end,
 }
