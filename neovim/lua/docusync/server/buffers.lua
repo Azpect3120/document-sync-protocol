@@ -19,12 +19,13 @@ function M.listen(server)
       local bufname_long = vim.api.nvim_buf_get_name(bufnr)
 
       -- Ignore oil buffers
-      if (string.sub(bufname_long, 1, 7) == "oil:///") then
-        return
-      end
+      if (string.sub(bufname_long, 1, 7) == "oil:///") then return end
 
       -- Get the buffer name relative to the current working directory
       local bufname = string.sub(bufname_long, #cwd + 2, #bufname_long)
+
+      -- Ignore empty buffer names
+      if (bufname == "") then return end
 
       -- Add the buffer to the server data
       server.data.buffers[bufname] = bufnr
@@ -97,20 +98,6 @@ function M.listen(server)
     end
   })
 end
-
- --   Error executing luv callback: 
- -- ...Protocol/new_arch/neovim/lua/docusync/server/buffers.lua:37: EPIPE 
- -- stack traceback: 
- -- [C]: in function 'assert' 
- -- ...Protocol/new_arch/neovim/lua/docusync/server/buffers.lua:37: in function <.. 
- -- ..Protocol/new_arch/neovim/lua/docusync/server/buffers.lua:37> 
- -- [C]: at 0x562d736e2450 
- -- [C]: in function 'pcall' 
- -- .../azpect/.local/share/nvim/lazy/oil.nvim/lua/oil/init.lua:692: in function 'c 
- -- callback' 
- -- ...ocal/share/nvim/lazy/oil.nvim/lua/oil/adapters/files.lua:257: in function '' 
- -- ' 
- -- vim/_editor.lua: in function <vim/_editor.lua:0> 
 
 -- Return the module
 return M
