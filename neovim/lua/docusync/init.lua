@@ -10,9 +10,9 @@ local capabilities = require("docusync.capabilities")
 ---@field server Server
 local M = {
   -- Default client values
-  client = { host = "127.0.0.1", port = 3270, tcp = nil, server_details = { identifier = "", password = "", capabilities = nil } },
+  client = { host = "127.0.0.1", port = 3270, tcp = nil, server_details = {identifier = "", password = "", capabilities = nil, buffers = {}} },
   -- Default server values
-  server = { host = "127.0.0.1", port = 3270, tcp = nil, capabilities = capabilities.default(), connections = {} },
+  server = { host = "127.0.0.1", port = 3270, tcp = nil, capabilities = capabilities.default(), connections = {}, data = { buffers = {} } },
 }
 
 function M.test_suite()
@@ -35,7 +35,39 @@ function M.test_suite()
   local last_lines = vim.api.nvim_buf_get_lines(cur_bufnr, 0, -1, false)
 
   vim.api.nvim_buf_attach(cur_bufnr, false, {
-    -- on_bytes = function(bytes, buffer, change_tick, start_row, star_col, byte_offset, old_end_row, old_end_byte_length, new_end_row, new_end_col, new_end_byte_length)
+    -- This kinda works? Sending back entire lines though not (row, columns)
+    -- FIRST TEST: This can be used to set virtual text, basically all its for
+    -- on_lines = function(_, bufnr, _, first_line, last_line)
+    --   local lines = vim.api.nvim_buf_get_lines(bufnr, first_line, last_line, false)
+    --   print(first_line .. ":" .. last_line .. " " .. vim.inspect(lines))
+    --
+    --   local ns = vim.api.nvim_create_namespace("docusync_testing_suite")
+    --
+    --
+    --   -- Creating virtual text
+    --   vim.api.nvim_buf_set_extmark(
+    --     bufnr,
+    --     ns,
+    --     first_line,
+    --     0,
+    --     {
+    --       id = first_line,
+    --       virt_text = { { "NOT SYNCED", "Comment" } },
+    --       virt_text_pos = "eol",  -- right_align
+    --
+    --       -- Add stuff to the gutter
+    --       -- THIS COULD BE USED TO IDENTIFY WHO CHANGED THIS LINE
+    --       sign_text = " !",
+    --       sign_hl_group = "CursorLineSign",
+    --     }
+    --   )
+    --
+    --   -- Delete the virtual text after 1 second
+    --   vim.loop.new_timer():start(1000, 0, vim.schedule_wrap(function()
+    --     vim.api.nvim_buf_del_extmark(bufnr, ns, first_line)
+    --   end))
+    --
+    -- end,
 
     on_bytes = function()
       local new_lines = vim.api.nvim_buf_get_lines(cur_bufnr, 0, -1, false)
@@ -61,7 +93,6 @@ function M.test_suite()
       last_lines = new_lines
     end,
   })
-
 end
 
 function M.dump_server()
@@ -125,6 +156,24 @@ function M.stop_server()
 
   -- Stop the server
   tcp.server.stop_server(M.server)
+end
+
+--- Get the list of open documents from the server.
+--- This will send a request to the server to get the list of open documents.
+--- The server will respond with a list of open documents which triggers a 
+--- telescope picker to display the list.
+--- @return nil
+function M.document_list()
+  -- Ensure the client is connected to a server
+  assert(M.client.tcp, "Client is not connected to a server, cannot get document list.")
+
+  -- Create the event to get the list of open documents
+  local event = require("docusync.client.events.constructor").events.document_list(M.client.server_details.identifier)
+
+  -- Send the event to the server
+  M.client.tcp:write(event, function(err)
+    assert(not err, err)
+  end)
 end
 
 return M

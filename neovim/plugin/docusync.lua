@@ -45,6 +45,15 @@ if not _G.myPluginLoaded then
     { nargs = 0 }
   )
 
+  -- Create a command to get the document list
+  vim.api.nvim_create_user_command(
+    "DocuSyncDocumentList",
+    function (_)
+      require("docusync").document_list()
+    end,
+    { nargs = 0 }
+  )
+
   -- Create a command to dump the DocuSync server data
   vim.api.nvim_create_user_command(
     "DocuSyncDumpServer",
@@ -63,9 +72,9 @@ if not _G.myPluginLoaded then
     { nargs = 0 }
   )
 
-  -- Create a command to run the DocuSync test suite
+  -- Create a command to run the DocuSync testing suite
   vim.api.nvim_create_user_command(
-    "DocuSyncTestSuite",
+    "DocuSyncTest",
     function (_)
       require("docusync").test_suite()
     end,
