@@ -63,11 +63,11 @@ if not _G.myPluginLoaded then
     { nargs = 0 }
   )
 
-  -- Create a command to run the DocuSync test suite
+  -- Create a command to run the DocuSync testing suite
   vim.api.nvim_create_user_command(
-    "DocuSyncTestSuite",
+    "DocuSyncTest",
     function (_)
-      require("docusync").test_suite()
+      require("docusync").testing_suite()
     end,
     { nargs = 0 }
   )

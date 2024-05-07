@@ -36,6 +36,38 @@ function M.test_suite()
 
   vim.api.nvim_buf_attach(cur_bufnr, false, {
     -- on_bytes = function(bytes, buffer, change_tick, start_row, star_col, byte_offset, old_end_row, old_end_byte_length, new_end_row, new_end_col, new_end_byte_length)
+    -- This kinda works? Sending back entire lines though not (row, columns)
+    on_lines = function(_, bufnr, _, first_line, last_line)
+      local lines = vim.api.nvim_buf_get_lines(bufnr, first_line, last_line, false)
+      print(first_line .. ":" .. last_line .. " " .. vim.inspect(lines))
+
+      local ns = vim.api.nvim_create_namespace("docusync_testing_suite")
+
+
+      -- Creating virtual text
+      vim.api.nvim_buf_set_extmark(
+        bufnr,
+        ns,
+        first_line,
+        0,
+        {
+          id = first_line,
+          virt_text = { { "NOT SYNCED", "Comment" } },
+          virt_text_pos = "eol",  -- right_align
+
+          -- Add stuff to the gutter
+          -- THIS COULD BE USED TO IDENTIFY WHO CHANGED THIS LINE
+          sign_text = " !",
+          sign_hl_group = "CursorLineSign",
+        }
+      )
+
+      -- Delete the virtual text after 1 second
+      vim.loop.new_timer():start(1000, 0, vim.schedule_wrap(function()
+        vim.api.nvim_buf_del_extmark(bufnr, ns, first_line)
+      end))
+
+    end,
 
     on_bytes = function()
       local new_lines = vim.api.nvim_buf_get_lines(cur_bufnr, 0, -1, false)
@@ -61,7 +93,6 @@ function M.test_suite()
       last_lines = new_lines
     end,
   })
-
 end
 
 function M.dump_server()
