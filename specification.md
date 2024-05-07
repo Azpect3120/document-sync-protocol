@@ -23,6 +23,9 @@
   - [Disconnect from Server](#DisconnectFromServer)
   - [Sync Document](#SyncDocument)
   - [Update Document](#UpdateDocument)
+  - [Open Document](#OpenDocument)
+  - [Close Document](#CloseDocument)
+  - [List Documents](#ListDocuments)
 - [Server & Client Shared Types](#Server&ClientSharedTypes)
   - [Server Capabilities](#ServerCapabilities)
 
@@ -414,6 +417,135 @@ interface UpdateDocumentEvent {
      */
     time: Date;
 }
+```
+
+### <a id="OpenDocument">Open Document</a>
+
+#### <a id="OpenDocumentEvent">Event</a>
+
+The `document/open` event is emitted by the server whenever a new document is opened. The server will then allow 
+the clients to connect to the document and begin syncing the document content. The `document/list` event can be used
+to get a list of the all the documents that are currently open on the server. The name of the document is the path
+of the document relative to the root in which Neovim was opened in. The content that is in the document will be sent
+to the client when they connect to the document.
+
+```typescript
+interface OpenDocumentEvent {
+    /**
+     *  Name of the event being emitted.
+     *  Event properties are unique and found in all events.
+     */
+    event: string = "document/open";
+
+    /**
+     *  The name of the document that the server is opening.
+     *  This is relative to the server and can be used to identify the document
+     *  when more than one document is being synced and updated.
+     *  Relative to the root in which Neovim was opened in.
+     */
+    document: string;
+
+    /**
+     *  Timestamp of this update.
+     *  Depending on the implementation this can be used in various
+     *  places.
+     */
+    time: Date;
+}
+```
+
+### <a id="CloseDocument">Close Document</a>
+
+#### <a id="CloseDocumentEvent">Event</a>
+
+The `document/close` event is emitted by the server whenever a new document is closed. The server will then stop
+any connections to the document and the clients will no longer be able to connect to the document. The `document/list`
+event can be used to get a list of the all the documents that are currently open on the server. The name of the document 
+is the path of the document relative to the root in which Neovim was opened in.
+
+```typescript
+interface CloseDocumentEvent {
+    /**
+     *  Name of the event being emitted.
+     *  Event properties are unique and found in all events.
+     */
+    event: string = "document/close";
+
+    /**
+     *  The name of the document that the server is closed.
+     *  This is relative to the server and can be used to identify the document
+     *  when more than one document is being synced and updated.
+     *  Relative to the root in which Neovim was opened in.
+     */
+    document: string;
+
+    /**
+     *  Timestamp of this update.
+     *  Depending on the implementation this can be used in various
+     *  places.
+     */
+    time: Date;
+}
+```
+
+### <a id="ListDocuments">List Documents</a>
+
+#### <a id="ListDocumentsEvent">Event</a>
+
+The `document/list` event is emitted by any client who needs to get a list of the open documents on the server.
+The server will then send a list of the open documents to the client. The name of the document is the path of the document 
+relative to the root in which Neovim was opened in.
+
+```typescript
+interface ListDocumentEvent {
+    /**
+     *  Name of the event being emitted.
+     *  Event properties are unique and found in all events.
+     */
+    event: string = "document/list";
+
+    /**
+     *  Identifier of the client who is sending this event to the server.
+     *  This value is provided by the server when the client connects.
+     *  If the server does not impliment identifiers, this value can be
+     *  null ("").
+     */
+    identifier: string;
+}
+```
+
+#### <a id="ListDocumentsResponse">Response</a>
+
+This is the response returned by the server a client emits the `document/list` event.
+
+```typescript
+interface ListDocumentResponse {
+    /**
+     *  Name of the response being emitted.
+     *  Event properties are unique and found in all responses.
+     */
+    response: string = "document/list";
+
+    /**
+     *  Status of the response.
+     */
+    success: boolean;
+
+    /**
+     *  List of the open documents on the server. The name of the documents
+     *  is the path of the document relative to the root in which Neovim was
+     *  opened in. Any closed buffers will not be returned in this list.
+     */
+    buffer: string[];
+
+    /**
+     *  Timestamp of this update.
+     *  Depending on the implementation this can be used in various
+     *  places.
+     */
+    time: Date;
+}
+
 ```
 
 <br>

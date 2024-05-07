@@ -50,6 +50,10 @@ return {
         events.server_connect(server, decoded, conn)
       elseif decoded.event == "server/disconnect" then
         events.server_disconnect(server, decoded)
+      elseif decoded.event == "document/list" then
+        events.document_list(server, decoded, conn)
+      else
+        print("Event: " .. decoded.event .. " not implemented!")
       end
 
     -- Call appropriate notification

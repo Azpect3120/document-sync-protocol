@@ -49,6 +49,12 @@ return {
     if type == "event" then
       if decoded.event == "server/stop" then
         events.server_stop(decoded, client)
+      elseif decoded.event == "document/open" then
+        events.document_open(decoded, client)
+      elseif decoded.event == "document/close" then
+        events.document_close(decoded, client)
+      else
+        print("Event: " .. decoded.event .. " not implemented!")
       end
 
     -- Call appropriate notification
@@ -57,12 +63,18 @@ return {
         notifications.client_connect(decoded)
       elseif decoded.notification == "client/disconnect" then
         notifications.client_disconnect(decoded)
+      else
+        print("Notification: " .. decoded.notification .. " not implemented!")
       end
 
     -- Call appropriate response
     elseif type == "response" then
       if decoded.response == "server/connect" then
         responses.server_connect(client, decoded)
+      elseif decoded.response == "document/list" then
+        responses.document_list(client, decoded)
+      else
+        print("Response: " .. decoded.response .. " not implemented!")
       end
     end
   end

@@ -2,8 +2,8 @@
 
 return {
   events = {
-    --- Ran by the user who wishes to stop their running server. The server will no longer 
-    --- accept connections and the connected clients will be disconnected. Any data that 
+    --- Ran by the user who wishes to stop their running server. The server will no longer
+    --- accept connections and the connected clients will be disconnected. Any data that
     --- was not synced will be lost.
     ---
     --- This function will generate a server/stop event and return it as a JSON encoded string
@@ -11,10 +11,45 @@ return {
     --- @param host string The host of the server
     --- @param port number The port of the server
     --- @return string
-    server_stop = function (host, port)
+    server_stop = function(host, port)
       local event = vim.fn.json_encode({
         event = "server/stop",
         host = host .. ":" .. port,
+        time = os.time()
+      })
+      return event
+    end,
+
+    --- The `document/open` event is emitted by the server whenever a new document is opened. The server will then allow
+    --- the clients to connect to the document and begin syncing the document content. The `document/list` event can be used
+    --- to get a list of the all the documents that are currently open on the server. The name of the document is the path
+    --- of the document relative to the root in which Neovim was opened in. The content that is in the document will be sent
+    --- to the client when they connect to the document.
+    ---
+    --- This function will generate a document/open event and return it as a JSON encoded string which is emitted by the server
+    --- @param document string The path of the document that was opened
+    --- @return string
+    document_open = function(document)
+      local event = vim.fn.json_encode({
+        event = "document/open",
+        document = document,
+        time = os.time()
+      })
+      return event
+    end,
+
+    --- The `document/close` event is emitted by the server whenever a new document is closed. The server will then stop
+    --- any connections to the document and the clients will no longer be able to connect to the document. The `document/list`
+    --- event can be used to get a list of the all the documents that are currently open on the server. The name of the document
+    --- is the path of the document relative to the root in which Neovim was opened in.
+    ---
+    --- This function will generate a document/close event and return it as a JSON encoded string which is emitted by the server
+    --- @param document string The path of the document that was closed
+    --- @return string
+    document_close = function(document)
+      local event = vim.fn.json_encode({
+        event = "document/close",
+        document = document,
         time = os.time()
       })
       return event
@@ -42,7 +77,22 @@ return {
         capabilities = server.capabilities,
       })
       return response
-    end
+    end,
+
+    --- This is the response returned by the server a client emits the `document/list` event.
+    --- 
+    --- This function will generate a DocumentListResponse object and return it as a JSON encoded string
+    --- @param documents table<string> The list of open documents
+    --- @return string
+    document_list = function(documents)
+      local response = vim.fn.json_encode({
+        response = "document/list",
+        documents = documents,
+        status = true,
+        time = os.time()
+      })
+      return response
+    end,
   },
 
   notifications = {

@@ -23,4 +23,23 @@ return {
     -- Print success message
     print("Connected to server as: " .. response.identifier)
   end,
+
+  --- This is the response returned by the server a client emits the `document/list` event.
+  --- 
+  --- This function will handle the response from the server and FOR NOW just print the 
+  --- documents to the console. Only the OPENED documents will be in the response.
+  --- @param client Client The client object
+  --- @param response table The response data
+  --- @return nil
+  document_list = function(client, response)
+    if not response.status then
+      return print("Error retrieving document list: " .. response.error)
+    end
+
+    -- Print the documents to the console
+    print("Documents: ")
+    for _, document in ipairs(response.documents) do
+      print("  - " .. document)
+    end
+  end,
 }

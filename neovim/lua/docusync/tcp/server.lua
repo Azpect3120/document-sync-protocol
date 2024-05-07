@@ -23,6 +23,9 @@ function M.start_server(server)
   local success, error = server.tcp:bind(server.host, server.port)
   assert(success, error)
 
+  -- Start the listener that will handler the buffers in the server
+  require("docusync.server.buffers").listen(server)
+
   -- Listen for connections
   server.tcp:listen(128, function(err)
     -- Check for errors
@@ -45,7 +48,6 @@ function M.start_server(server)
       vim.schedule(function()
         require("docusync.server.events").parser.parse(server, chunk, client)
       end)
-
     end)
   end)
 
@@ -80,11 +82,11 @@ function M.stop_server(server)
   -- Reset the connections table
   server.connections = {}
   server.capabilities = nil
+  server.data = { buffers = {} }
 
   -- Print the server has been stopped
   print("Server has been stopped.")
 end
-
 
 -- Return module
 return M

@@ -22,7 +22,7 @@ function M.connect(client)
     -- Check for errors
     assert(not err, err)
 
-    -- Construct and send a server connect event
+    -- Construct and send a server/connect event
     vim.schedule(function()
       -- Construct event
       local event = require("docusync.client.events.constructor").events.server_connect(

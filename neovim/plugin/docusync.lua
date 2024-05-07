@@ -67,7 +67,7 @@ if not _G.myPluginLoaded then
   vim.api.nvim_create_user_command(
     "DocuSyncTest",
     function (_)
-      require("docusync").testing_suite()
+      require("docusync").test_suite()
     end,
     { nargs = 0 }
   )

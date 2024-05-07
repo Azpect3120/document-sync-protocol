@@ -14,8 +14,8 @@ return {
   --- status.
   ---
   --- This function is responsible for handling the server/connect event.
-  --- It will generate an identifier if one is not provided and ensure 
-  --- the host matches the server's host and port. If the host does not 
+  --- It will generate an identifier if one is not provided and ensure
+  --- the host matches the server's host and port. If the host does not
   --- match, an error response will be generated and sent to the client.
   --- If the password does not match, an error response will be generated
   --- and sent to the client. If the host and password match, a success
@@ -98,9 +98,9 @@ return {
     print(event.identifier .. " has connected to the server!")
   end,
 
-  --- Ran by the user who wishes to disconnect from the server. The callers 
-  --- files will remain unchanged until the connection is re-established. 
-  --- The connection is expected to be closed once this event is emitted, 
+  --- Ran by the user who wishes to disconnect from the server. The callers
+  --- files will remain unchanged until the connection is re-established.
+  --- The connection is expected to be closed once this event is emitted,
   --- hence, no response is expected.
   ---
   --- This function is responsible for handling the server/disconnect event.
@@ -108,6 +108,7 @@ return {
   --- a client/disconnect notification to all other clients on the server.
   --- @param server Server The server object
   --- @param event table The event data
+  --- @return nil
   server_disconnect = function(server, event)
     -- Remove the client from the server's connection table
     server.connections[event.identifier] = nil
@@ -124,5 +125,34 @@ return {
 
     -- Print success message on server
     print(event.identifier .. " has disconnected from the server!")
+  end,
+
+  --- The `document/list` event is emitted by any client who needs to get a list of the open documents on the server.
+  --- The server will then send a list of the open documents to the client. The name of the document is the path of the document
+  --- relative to the root in which Neovim was opened in.
+  --- 
+  --- This function is responsible for handling the document/list event. It will send back a list of the open documents to the client.
+  --- The documents can be found in the server.data.buffers table
+  --- @param server Server The server object
+  --- @param event table The event data
+  --- @param client uv_tcp_t The client connection object that was created
+  --- @return nil
+  document_list = function(server, event, client)
+    -- Create a list of the open documents
+    local documents = {}
+    for bufname, _ in pairs(server.data.buffers) do
+      table.insert(documents, bufname)
+    end
+
+    -- Generate the document list response
+    local response = constructor.responses.document_list(documents)
+
+    -- Send the document list response to the client
+    client:write(response, function(write_err)
+      if write_err then error("Error writing response to client: " .. write_err) end
+    end)
+
+    -- Print message on server
+    print("Sent document list to " .. event.identifier .. "!")
   end,
 }
