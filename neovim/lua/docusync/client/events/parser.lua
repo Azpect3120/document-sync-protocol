@@ -49,6 +49,8 @@ return {
     if type == "event" then
       if decoded.event == "server/stop" then
         events.server_stop(decoded, client)
+      elseif decoded.event == "document/sync" then
+        events.document_sync(decoded, client)
       else
         print("Event: " .. decoded.event .. " not implemented!")
       end

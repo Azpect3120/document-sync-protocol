@@ -39,6 +39,7 @@ return {
   --- @param response table The response data
   --- @return nil
   document_list = function(client, response)
+    -- Ensure the response indicates success
     if not response.status then
       return print("Error retrieving document list: " .. response.error)
     end
@@ -76,17 +77,31 @@ return {
           vim.api.nvim_buf_set_name(bufnr, "docusync:///" .. bufname)
           vim.api.nvim_win_set_buf(vim.api.nvim_get_current_win(), bufnr)
 
-          -- Trying to provide syntax highlighting 
+          -- Trying to provide syntax highlighting
           -- However this does not provide LSP support bc the root dir is not set
           -- WIP: This is a good start, but needs to be improved
           vim.cmd("filetype detect")
+
+          -- Spin up the on_attach function for the buffer
+          vim.api.nvim_buf_attach(bufnr, false, {
+            on_bytes = function(_, _bufnr)
+              -- Get the entire file as lines
+              local lines = vim.api.nvim_buf_get_lines(_bufnr, 0, -1, false)
+
+              -- Send content back to the server
+              local event = require("docusync.client.events.constructor").events.document_update(client.server_details.identifier, lines, bufname)
+
+              -- Send event to the server
+              client.tcp:write(event, function(write_err) assert(not write_err, write_err) end)
+            end,
+          })
 
           -- Add the buffer to the client object
           client.server_details.buffers[bufname] = bufnr
 
           -- Construct the document/open event
           local event = require("docusync.client.events.constructor").events.document_open(
-            client.server_details.identifier, bufname)
+          client.server_details.identifier, bufname)
 
           -- Send event to the server
           client.tcp:write(event, function(write_err)

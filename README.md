@@ -19,3 +19,5 @@ has connected.
 
 I want an event that the client sends that will request a response which the server returns
 the number of clients connected and their identifiers.
+
+Credit to [Ethan Heimer](https://github.com/ethan-heimer) for helping me develop the event system used in the neovim implement.

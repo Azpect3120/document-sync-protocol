@@ -28,4 +28,56 @@ return {
       client.server_details.capabilities = nil
     end)
   end,
+
+  --- The `document/sync` event is emitted by the server whenever a client updates the document. The server will then
+  --- send the updated document to all connected clients. The client will then update their document with the new content.
+  --- The server will also send the updated document to the client who emitted the `document/update` event. This is to
+  --- ensure that the client has the most up-to-date document content. The files content should be in a line-by-line format.
+  --- The client will handle the data by ["diffing"](https://neovim.io/doc/user/lua.html#vim.diff) each line and updating
+  --- the clients page with the new content. This event works together with the `document/update` event to keep all the client
+  --- and the server in sync.
+  ---
+  --- This function is responsible for handling the document/sync event. It will update the clients document with the new
+  --- content that was sent by the server. The client will then update their document with the new content. The client will
+  --- handle the data by "diffing" each line and updating the clients page with the new content. This event works together
+  --- with the document/update event to keep all the client and the server in sync.
+  --- @param event table The event object that was parsed
+  --- @param client Client The client object
+  --- @return nil
+  document_sync = function(event, client)
+    -- Get the buffer number for the document
+    local bufnr = client.server_details.buffers[event.document]
+
+    -- Buffer is not opened by the client
+    if not bufnr then
+      print("Document not found in clients buffer list")
+      return
+    end
+
+    -- Schedule the update to happen in the next safe tick
+    vim.schedule(function()
+      -- Update the clients buffer with the new content: diff
+      local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+      for i, line in ipairs(event.content) do
+        if lines[i] ~= line then
+          vim.schedule(function()
+            vim.api.nvim_buf_set_lines(bufnr, i - 1, i, false, { line })
+          end)
+        elseif lines[i] == nil then
+          vim.schedule(function()
+            vim.api.nvim_buf_set_lines(bufnr, i - 1, i, false, { "" })
+          end)
+        end
+      end
+
+      -- If lines were removed, clear them from the end of the file
+      -- BRILLIANT FIX RIGHT HERE
+      if #event.content < #lines then
+        vim.schedule(function()
+          vim.api.nvim_buf_set_lines(bufnr, #event.content, -1, false, {})
+        end)
+      end
+    end)
+  end,
 }

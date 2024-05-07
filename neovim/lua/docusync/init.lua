@@ -143,7 +143,7 @@ function M.start_server(host, port)
   M.server.port = port or M.server.port
 
   -- Nil check on the tcp object
-  assert(M.client.tcp == nil, "Server is already running, Stop the server first.")
+  assert(M.server.tcp == nil, "Server is already running, Stop the server first.")
 
   -- TODO: Implement the server capabilities
   M.server.capabilities = capabilities.default() -- or capabilities.new(...)

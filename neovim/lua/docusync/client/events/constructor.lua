@@ -21,7 +21,7 @@ return {
         event = "server/connect",
         host = host .. ":" .. port,
         identifier = identifier,
-        password = password,
+        password = password
       })
       return event
     end,
@@ -43,7 +43,7 @@ return {
       local event = vim.fn.json_encode({
         event = "server/disconnect",
         host = host .. ":" .. port,
-        identifier = identifier,
+        identifier = identifier
       })
       return event
     end,
@@ -79,7 +79,32 @@ return {
         event = "document/open",
         identifier = identifier,
         document = document,
-        time = os.time(),
+        time = os.time()
+      })
+      return event
+    end,
+
+
+    --- The `document/update` event is emitted by the client whenever a client updates the document.
+    --- The exact action that is required before emitting this event can vary depending on the client implementation.
+    --- But the client should send the entire document content to the server when emitting this event. The server will
+    --- then handle this data by ["diffing"](https://neovim.io/doc/user/lua.html#vim.diff) each line and updating the
+    --- servers page with the new content. The server will then emit the `document/sync` event to all connected clients,
+    --- which works basically the same way but with the roles reversed.
+    --- 
+    --- This function will construct a document/update event which the client will send to the server when the client updates
+    --- the document.
+    --- @param identifier string The identifier of the client
+    --- @param content table<string> The content of the document
+    --- @param document string The name of the document
+    --- @return string
+    document_update = function(identifier, content, document)
+      local event = vim.fn.json_encode({
+        event = "document/update",
+        identifier = identifier,
+        content = content,
+        document = document,
+        time = os.time()
       })
       return event
     end,

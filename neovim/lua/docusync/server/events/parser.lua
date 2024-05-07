@@ -28,7 +28,7 @@ return {
     -- Decode the data and handle any errors.
     local status, res = pcall(vim.fn.json_decode, data)
     if not status then
-      -- print("Error parsing provided data: " .. res)
+      print("Error parsing provided data: " .. res)
       return
     end
 
@@ -54,6 +54,8 @@ return {
         events.document_list(server, decoded, conn)
       elseif decoded.event == "document/open" then
         events.document_open(server, decoded, conn)
+      elseif decoded.event == "document/update" then
+        events.document_update(server, decoded, conn)
       else
         print("Event: " .. decoded.event .. " not implemented!")
       end

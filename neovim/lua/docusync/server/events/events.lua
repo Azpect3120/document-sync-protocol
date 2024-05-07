@@ -207,4 +207,75 @@ return {
       end
     end
   end,
+
+
+  --- The `document/update` event is emitted by the client whenever a client updates the document.
+  --- The exact action that is required before emitting this event can vary depending on the client implementation.
+  --- But the client should send the entire document content to the server when emitting this event. The server will
+  --- then handle this data by ["diffing"](https://neovim.io/doc/user/lua.html#vim.diff) each line and updating the
+  --- servers page with the new content. The server will then emit the `document/sync` event to all connected clients,
+  --- which works basically the same way but with the roles reversed.
+  ---
+  --- This function is responsible for handling the document/update event. It will update the content of the document
+  --- on the server using the provided content. It will then send a document/sync event to all connected clients.
+  --- The content is swapped using a diffing method.
+  --- @param server Server The server object
+  --- @param event table The event data
+  --- @param client uv_tcp_t The client connection object that was created
+  --- @return nil
+  document_update = function(server, event, client)
+    -- Ensure the document exists in the server's data
+    if not server.data.buffers[event.document] then
+      -- Generate some kind of error response here
+      -- Or maybe just do nothing?
+      return print(event.document .. " does not exist in the server's data")
+    end
+
+    -- Schedule the update to happen in the next safe tick
+    vim.schedule(function()
+      -- Get the buffer number of the document on the server
+      local bufnr = server.data.buffers[event.document]
+
+      -- Get the current content of the server's version of the document
+      local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+      -- Diff the content of the document and update it on the server
+      for i, line in ipairs(event.content) do
+        if lines[i] ~= line then
+          vim.schedule(function()
+            vim.api.nvim_buf_set_lines(bufnr, i - 1, i, false, { line })
+          end)
+        elseif lines[i] == nil then
+          vim.schedule(function()
+            vim.api.nvim_buf_set_lines(bufnr, i - 1, i, false, { "" })
+          end)
+        end
+      end
+
+      -- If lines were removed, clear them from the end of the file
+      -- BRILLIANT FIX RIGHT HERE
+      if #event.content < #lines then
+        vim.schedule(function()
+          vim.api.nvim_buf_set_lines(bufnr, #event.content, -1, false, {})
+        end)
+      end
+
+      -- Get the new lines of the document
+      lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+      -- Generate the document sync event
+      local sync_event = constructor.events.document_sync(event.document, lines)
+
+      -- Send the document sync event to all connected clients
+      for identifier, connection in pairs(server.connections) do
+        if connection:is_active() then
+          if identifier ~= event.identifier then
+            connection:write(sync_event, function(write_err) assert(not write_err, write_err) end)
+          end
+        else
+          server.connections[connection] = nil
+        end
+      end
+    end)
+  end,
 }

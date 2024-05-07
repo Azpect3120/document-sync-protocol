@@ -20,6 +20,28 @@ return {
       return event
     end,
 
+    --- The `document/sync` event is emitted by the server whenever a client updates the document. The server will then
+    --- send the updated document to all connected clients. The client will then update their document with the new content.
+    --- The server will also send the updated document to the client who emitted the `document/update` event. This is to
+    --- ensure that the client has the most up-to-date document content. The files content should be in a line-by-line format.
+    --- The client will handle the data by ["diffing"](https://neovim.io/doc/user/lua.html#vim.diff) each line and updating
+    --- the clients page with the new content. This event works together with the `document/update` event to keep all the client
+    --- and the server in sync.
+    ---
+    --- This function will generate a DocumentSyncEvent object and return it as a JSON encoded string. This event is emitted
+    --- each time the server receives a document update from a client.
+    --- @param document string The name of the document
+    --- @param content table<string> The content of the document
+    --- @return string
+    document_sync = function(document, content)
+      local event = vim.fn.json_encode({
+        event = "document/sync",
+        document = document,
+        content = content,
+        time = os.time()
+      })
+      return event
+    end,
   },
 
   responses = {
