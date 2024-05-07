@@ -30,6 +30,26 @@ function M.listen(server)
       -- Add the buffer to the server data
       server.data.buffers[bufname] = bufnr
 
+      -- Spawn the attach listener for the server buffers
+      vim.api.nvim_buf_attach(bufnr, false, {
+        on_bytes = function(_, _bufnr)
+          -- Get the lines from the buffer
+          local lines  = vim.api.nvim_buf_get_lines(_bufnr, 0, -1, false)
+
+          -- Create the document/sync notification
+          local event = require("docusync.server.events.constructor").events.document_sync(bufname, lines)
+
+          -- Write the event to all connected clients and disconnect any inactive connections
+          for _, connection in pairs(server.connections) do
+            if connection:is_active() then
+              connection:write(event, function(err) assert(not err, err) end)
+            else
+              server.connections[connection] = nil
+            end
+          end
+        end,
+      })
+
       -- Create document/open notification
       local notification = require("docusync.server.events.constructor").notifications.document_open(bufname)
 
