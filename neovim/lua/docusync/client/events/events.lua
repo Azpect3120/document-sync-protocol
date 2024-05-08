@@ -45,6 +45,8 @@ return {
   --- @param client Client The client object
   --- @return nil
   document_sync = function(event, client)
+    print(event.document)
+
     -- Get the buffer number for the document
     local bufnr = client.server_details.buffers[event.document]
 

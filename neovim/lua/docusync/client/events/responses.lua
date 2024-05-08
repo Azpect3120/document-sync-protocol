@@ -76,6 +76,8 @@ return {
           local bufnr = vim.api.nvim_create_buf(true, false)
           vim.api.nvim_buf_set_name(bufnr, "docusync:///" .. bufname)
           vim.api.nvim_win_set_buf(vim.api.nvim_get_current_win(), bufnr)
+          vim.api.nvim_buf_set_option(bufnr, "buftype", "nofile")
+          vim.api.nvim_buf_set_option(bufnr, "buflisted", false)
 
           -- Trying to provide syntax highlighting
           -- However this does not provide LSP support bc the root dir is not set
