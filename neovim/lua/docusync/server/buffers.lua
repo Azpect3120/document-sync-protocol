@@ -30,6 +30,7 @@ function M.listen(server)
       -- Add the buffer to the server data
       server.data.buffers[bufname] = bufnr
 
+
       -- Create document/open notification
       local notification = require("docusync.server.events.constructor").notifications.document_open(bufname)
 
