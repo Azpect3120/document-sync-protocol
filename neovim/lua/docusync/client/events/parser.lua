@@ -29,7 +29,7 @@ return {
     -- Decode the data and handle any errors.
     local status, res = pcall(vim.fn.json_decode, data)
     if not status then
-      print("Error parsing provided data: " .. res)
+      -- print("Error parsing provided data: " .. res)
       return
     end
 

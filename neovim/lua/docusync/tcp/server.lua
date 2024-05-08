@@ -53,6 +53,9 @@ function M.start_server(server)
 
   -- Print the server has been started
   print("Server has been started on " .. server.host .. ":" .. server.port)
+
+  -- Start the connected clients window
+  require("docusync.server.menu").spawn.connected_clients(server)
 end
 
 --- Stop a tcp server that is currently running.
