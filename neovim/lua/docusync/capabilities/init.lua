@@ -1,6 +1,6 @@
 --- Capabilities class
 --- @class Capabilities
---- @field document_sync integer
+--- @field document_sync boolean
 --- @field compression string
 --- @field identifiers boolean
 --- @field cursor_sync integer
@@ -13,7 +13,7 @@ local M = {}
 --- @return Capabilities
 function M.default ()
     return {
-        document_sync = 1000,
+        document_sync = true,
         compression = "",
         identifiers = true,
         cursor_sync = 1000,
@@ -22,7 +22,7 @@ function M.default ()
 end
 
 --- Create a new Capabilities object
---- @param document_sync integer Time in milliseconds between syncs, 0 defines read-only for clients.
+--- @param document_sync boolean Should the server support document sync.
 --- @param compression string Should a compression algorithm be used, blank defines no compression.
 --- @param identifiers boolean Should the server support identifiers.
 --- @param cursor_sync integer Time in milliseconds between cursor syncs, 0 defines no cursor sync.

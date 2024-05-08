@@ -21,3 +21,8 @@ I want an event that the client sends that will request a response which the ser
 the number of clients connected and their identifiers.
 
 Credit to [Ethan Heimer](https://github.com/ethan-heimer) for helping me develop the event system used in the neovim implement.
+
+
+## Known Issues
+The TCP connection seems to be rate limited which means the server/client cannot send big files because the line data
+overflow the TCP limit. I THINK?!

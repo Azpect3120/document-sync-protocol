@@ -10,7 +10,7 @@ local capabilities = require("docusync.capabilities")
 ---@field server Server
 local M = {
   -- Default client values
-  client = { host = "127.0.0.1", port = 3270, tcp = nil, server_details = {identifier = "", password = "", capabilities = nil, buffers = {}} },
+  client = { host = "127.0.0.1", port = 3270, tcp = nil, server_details = { identifier = "", password = "", capabilities = nil, buffers = {} } },
   -- Default server values
   server = { host = "127.0.0.1", port = 3270, tcp = nil, capabilities = capabilities.default(), connections = {}, data = { buffers = {} } },
 }
@@ -164,7 +164,7 @@ end
 
 --- Get the list of open documents from the server.
 --- This will send a request to the server to get the list of open documents.
---- The server will respond with a list of open documents which triggers a 
+--- The server will respond with a list of open documents which triggers a
 --- telescope picker to display the list.
 --- @return nil
 function M.document_list()

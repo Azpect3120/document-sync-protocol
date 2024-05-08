@@ -17,22 +17,30 @@
 
 ## <a id="TableOfContents">Table Of Contents</a>
 - [Events and Notifications](#EventsAndNotifications)
-  - [Start Server](#StartServer)
-  - [Stop Server](#StopServer)
-  - [Connect to Server](#ConnectToServer)
-  - [Disconnect from Server](#DisconnectFromServer)
-  - [Sync Document](#SyncDocument)
-  - [Update Document](#UpdateDocument)
-  - [Open Document](#OpenDocument)
-  - [Close Document](#CloseDocument)
-  - [List Documents](#ListDocuments)
+    - [Server Events](#ServerEvents)
+        - [Start Server](#StartServer)
+        - [Stop Server](#StopServer)
+        - [Connect to Server](#ConnectToServer)
+        - [Disconnect from Server](#DisconnectFromServer)
+    - [Document Events](#DocumentEvents)
+        - [Sync Document](#SyncDocument)
+        - [Update Document](#UpdateDocument)
+        - [Open Document](#OpenDocument)
+        - [Close Document](#CloseDocument)
+        - [List Documents](#ListDocuments)
+    - [Misc. Connection Events](#MiscConnectionEvents)
+        - [Client List](#ClientList)
 - [Server & Client Shared Types](#Server&ClientSharedTypes)
-  - [Server Capabilities](#ServerCapabilities)
+    - [Server Capabilities](#ServerCapabilities)
 
 
 <br>
 
 ## <a id="EventsAndNotifications">Events and Notifications</a>
+
+## <a id="ServerEvents">Server Events</a>
+
+Server and client events are listed below
 
 ### <a id="StartServer">Start Server</a>
 
@@ -324,6 +332,10 @@ interface DisconnectServerNotification {
 ```
 
 <br>
+
+## <a id="DocumentEvents">DocumentEvents</a>
+
+Document events are listed below
 
 ### <a id="SyncDocument">Sync Document</a>
 
@@ -638,6 +650,14 @@ interface ListDocumentResponse {
 
 <br>
 
+## <a id="MiscConnectionEvents">Misc. Connection Events</a>
+
+Miscellaneous connection events are listed below
+
+### <a id="ClientList">Client List</a>
+
+<br>
+
 ## <a id="Server&ClientSharedTypes">Server & Client Shared Types</a>
 
 ### <a id="ServerCapabilities">Server Capabilities</a>
@@ -649,12 +669,8 @@ interface ServerCapabilities {
     /**
      *  Should the server allow multiple users to edit the same file at 
      *  the same time.
-     *  Value provided determines the time between each sync event in
-     *  milliseconds.
-     *  When 0, clients will be put into a read-only mode.
-     *  Default is 1000ms.
      */
-    document_sync: integer = 1000;
+    document_sync: boolean = true;
 
     /**
      *  Should the server send and receive document data in a compressed
