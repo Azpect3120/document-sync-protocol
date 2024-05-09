@@ -26,6 +26,10 @@ function M.start_server(server)
   -- Start the listener that will handler the buffers in the server
   require("docusync.server.buffers").listen(server)
 
+  -- Start the connected clients window
+  require("docusync.server.menu").spawn.connected_clients(server)
+  require("docusync.server.menu").spawn.client_buffers(server)
+
   -- Listen for connections
   server.tcp:listen(128, function(err)
     -- Check for errors
@@ -53,9 +57,6 @@ function M.start_server(server)
 
   -- Print the server has been started
   print("Server has been started on " .. server.host .. ":" .. server.port)
-
-  -- Start the connected clients window
-  require("docusync.server.menu").spawn.connected_clients(server)
 end
 
 --- Stop a tcp server that is currently running.
@@ -74,6 +75,10 @@ function M.stop_server(server)
     if connection:is_active() then
       connection:write(event, function(err) assert(not err, err) end)
     else
+      -- Update the connected clients window
+      require("docusync.server.menu.edit").connected_clients(server)
+      require("docusync.server.menu.edit").client_buffers(server)
+
       server.connections[connection] = nil
     end
   end
@@ -86,10 +91,17 @@ function M.stop_server(server)
     server.tcp = nil
   end)
 
+  -- Close the windows being displayed for the server
+  for _, winnr in pairs(server.data.windows) do
+    local bufnr = vim.api.nvim_win_get_buf(winnr)
+    vim.api.nvim_win_close(winnr, false)
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end
+
   -- Reset the connections table
   server.connections = {}
   server.capabilities = nil
-  server.data = { buffers = {} }
+  server.data = { buffers = {}, windows = {}, client_buffers = {} }
 
   -- Print the server has been stopped
   print("Server has been stopped.")

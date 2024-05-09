@@ -12,7 +12,7 @@ local M = {
   -- Default client values
   client = { host = "127.0.0.1", port = 3270, tcp = nil, server_details = { identifier = "", password = "", capabilities = nil, buffers = {} } },
   -- Default server values
-  server = { host = "127.0.0.1", port = 3270, tcp = nil, capabilities = capabilities.default(), connections = {}, data = { buffers = {} } },
+  server = { host = "127.0.0.1", port = 3270, tcp = nil, capabilities = capabilities.default(), connections = {}, data = {buffers = {}, windows = {}, client_buffers = {}} }
 }
 
 function M.test_suite()

@@ -54,6 +54,8 @@ return {
         events.document_list(server, decoded, conn)
       elseif decoded.event == "document/open" then
         events.document_open(server, decoded, conn)
+      elseif decoded.event == "document/close" then
+        events.document_close(server, decoded, conn)
       elseif decoded.event == "document/update" then
         events.document_update(server, decoded, conn)
       else

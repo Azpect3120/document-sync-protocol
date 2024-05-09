@@ -30,7 +30,6 @@ function M.listen(server)
       -- Add the buffer to the server data
       server.data.buffers[bufname] = bufnr
 
-
       -- Create document/open notification
       local notification = require("docusync.server.events.constructor").notifications.document_open(bufname)
 
@@ -39,6 +38,10 @@ function M.listen(server)
         if connection:is_active() then
           connection:write(notification, function(err) assert(not err, err) end)
         else
+          -- Update the connected clients window
+          require("docusync.server.menu.edit").connected_clients(server)
+          require("docusync.server.menu.edit").client_buffers(server)
+
           server.connections[connection] = nil
         end
       end
@@ -73,6 +76,10 @@ function M.listen(server)
         if connection:is_active() then
           connection:write(notification, function(err) assert(not err, err) end)
         else
+          -- Update the connected clients window
+          require("docusync.server.menu.edit").connected_clients(server)
+          require("docusync.server.menu.edit").client_buffers(server)
+
           server.connections[connection] = nil
         end
       end
@@ -112,6 +119,10 @@ function M.listen(server)
             if connection:is_active() then
               connection:write(sync_event, function(err) assert(not err, err) end)
             else
+              -- Update the connected clients window
+              require("docusync.server.menu.edit").connected_clients(server)
+              require("docusync.server.menu.edit").client_buffers(server)
+
               server.connections[connection] = nil
             end
           end

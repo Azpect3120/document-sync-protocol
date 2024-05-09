@@ -556,6 +556,45 @@ interface OpenDocumentResponse {
 
 ### <a id="CloseDocument">Close Document</a>
 
+#### <a id="CloseDocumentEvent">Event</a>
+
+The `document/close` event is emitted by the client whenever a document is closed by the client. The server will then
+update the data stored in the server and handle any other necessary actions. The name of the document is the path of
+the document relative to the root in which Neovim was opened in.
+
+```typescript
+interface CloseDocumentEvent {
+    /**
+     *  Name of the event being emitted.
+     *  Event properties are unique and found in all event.
+     */
+    event: string = "document/close";
+
+    /**
+     *  The name of the document that the client is closing.
+     *  This is relative to the server and can be used to identify the document
+     *  when more than one document is being synced and updated.
+     *  Relative to the root in which Neovim was opened in.
+     */
+    document: string;
+
+    /**
+     *  Identifier of the client who is sending this event to the server.
+     *  This value is provided by the server when the client connects.
+     *  If the server does not impliment identifiers, this value can be
+     *  null ("").
+     */
+    identifier: string;
+
+    /**
+     *  Timestamp of this event.
+     *  Depending on the implementation this can be used in various
+     *  places.
+     */
+    time: Date;
+}
+```
+
 #### <a id="CloseDocumentNotification">Notification</a>
 
 The `document/close` notification is emitted by the server whenever a new document is closed. The server will then stop

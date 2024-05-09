@@ -61,6 +61,10 @@ return {
           if identifier ~= event.identifier then
             connection:write(notification, function(write_err) assert(not write_err, write_err) end)
           else
+            -- Update the connected clients window
+            require("docusync.server.menu.edit").connected_clients(server)
+            require("docusync.server.menu.edit").client_buffers(server)
+
             server.connections[connection] = nil
           end
         end
@@ -73,8 +77,9 @@ return {
     -- TODO: Ensure the password match
     -- If they do not, generate an error response and send it to the client
 
-    -- Add the new connection to the servers connection table
+    -- Add the new connection to the servers connection table and the buffers table
     server.connections[event.identifier] = client
+    server.data.client_buffers[event.identifier] = ""
 
     -- Send response to the client with the server details and its identifier
     local response = constructor.responses.server_connect(server, true, "", event.identifier)
@@ -89,10 +94,18 @@ return {
         if identifier ~= event.identifier then
           connection:write(notification, function(write_err) assert(not write_err, write_err) end)
         else
+          -- Update the connected clients window
+          require("docusync.server.menu.edit").connected_clients(server)
+          require("docusync.server.menu.edit").client_buffers(server)
+
           server.connections[connection] = nil
         end
       end
     end
+
+    -- Update the connected clients window
+    require("docusync.server.menu.edit").connected_clients(server)
+    require("docusync.server.menu.edit").client_buffers(server)
 
     -- Print success message on server
     print(event.identifier .. " has connected to the server!")
@@ -110,8 +123,9 @@ return {
   --- @param event table The event data
   --- @return nil
   server_disconnect = function(server, event)
-    -- Remove the client from the server's connection table
+    -- Remove the client from the server's connection table and the buffers table
     server.connections[event.identifier] = nil
+    server.data.client_buffers[event.identifier] = nil
 
     -- Generate client/disconnect notification
     local notification = constructor.notifications.client_disconnect(event.identifier)
@@ -121,9 +135,17 @@ return {
       if connection:is_active() then
         connection:write(notification, function(write_err) assert(not write_err, write_err) end)
       else
+        -- Update the connected clients window
+        require("docusync.server.menu.edit").connected_clients(server)
+        require("docusync.server.menu.edit").client_buffers(server)
+
         server.connections[connection] = nil
       end
     end
+
+    -- Update the connected clients window
+    require("docusync.server.menu.edit").connected_clients(server)
+    require("docusync.server.menu.edit").client_buffers(server)
 
     -- Print success message on server
     print(event.identifier .. " has disconnected from the server!")
@@ -160,7 +182,8 @@ return {
   --- the root in which Neovim was opened in. The content will be sent back to the client in a line-by-line format.
   ---
   --- This function is responsible for handling the document/open event. It will send back the content of the document to the client.
-  --- The content of the document is sent back in a line-by-line format.
+  --- The content of the document is sent back in a line-by-line format. This function will also update the server's data with the
+  --- client's connection to the document and update the menu windows.
   --- @param server Server The server object
   --- @param event table The event data
   --- @param client uv_tcp_t The client connection object that was created
@@ -181,6 +204,12 @@ return {
       end)
       return
     end
+
+    -- Add the clients connection to buffer table
+    server.data.client_buffers[event.identifier] = event.document
+
+    -- Update menu windows
+    require("docusync.server.menu.edit").client_buffers(server)
 
     -- Get the content of the document
     local bufs = vim.api.nvim_list_bufs()
@@ -208,7 +237,38 @@ return {
     end
   end,
 
+  --- The `document/close` event is emitted by the client whenever a document is closed by the client. The server will then
+  --- update the data stored in the server and handle any other necessary actions. The name of the document is the path of
+  --- the document relative to the root in which Neovim was opened in.
+  ---
+  --- This function is responsible for handling the document/close event. It will update the server's data with the client's
+  --- disconnection from the document and update the menu windows.
+  --- @param server Server The server object
+  --- @param event table The event data
+  --- @param client uv_tcp_t The client connection object that was created
+  document_close = function(server, event, client)
+    -- Ensure the document exists in the server's data
+    if not server.data.buffers[event.document] then
+      local response = constructor.responses.document_open(
+        false,
+        "Document has been opened by the server or does not exist!",
+        event.document,
+        {}
+      )
 
+      -- Send errored response to the client
+      client:write(response, function(write_err)
+        if write_err then error("Error writing response to client: " .. write_err) end
+      end)
+      return
+    end
+
+    -- Remove the clients connection to buffer table
+    server.data.client_buffers[event.identifier] = ""
+
+    -- Update menu windows
+    require("docusync.server.menu.edit").client_buffers(server)
+  end,
   --- The `document/update` event is emitted by the client whenever a client updates the document.
   --- The exact action that is required before emitting this event can vary depending on the client implementation.
   --- But the client should send the entire document content to the server when emitting this event. The server will
@@ -273,6 +333,10 @@ return {
             connection:write(sync_event, function(write_err) assert(not write_err, write_err) end)
           end
         else
+          -- Update the connected clients window
+          require("docusync.server.menu.edit").connected_clients(server)
+          require("docusync.server.menu.edit").client_buffers(server)
+
           server.connections[connection] = nil
         end
       end

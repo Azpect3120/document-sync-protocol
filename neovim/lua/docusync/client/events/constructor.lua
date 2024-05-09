@@ -48,7 +48,6 @@ return {
       return event
     end,
 
-
     --- The `document/list` event is emitted by any client who needs to get a list of the open documents on the server.
     --- The server will then send a list of the open documents to the client. The name of the document is the path of the document
     --- relative to the root in which Neovim was opened in.
@@ -64,7 +63,6 @@ return {
       })
       return event
     end,
-
 
     --- The `document/open` event is emitted by the client whenever a document is opened by the client. The server will then
     --- send back the content of the document to the client. The name of the document is the path of the document relative to
@@ -84,6 +82,24 @@ return {
       return event
     end,
 
+    --- The `document/close` event is emitted by the client whenever a document is closed by the client. The server will then
+    --- update the data stored in the server and handle any other necessary actions. The name of the document is the path of
+    --- the document relative to the root in which Neovim was opened in.
+    ---
+    --- This function will construct a document/close event which the client will send to the server when the client closes 
+    --- a document.
+    --- @param identifier string The identifier of the client
+    --- @param document string The name of the document
+    --- @return string
+    document_close = function(identifier, document)
+      local event = vim.fn.json_encode({
+        event = "document/close",
+        identifier = identifier,
+        document = document,
+        time = os.time()
+      })
+      return event
+    end,
 
     --- The `document/update` event is emitted by the client whenever a client updates the document.
     --- The exact action that is required before emitting this event can vary depending on the client implementation.
@@ -108,7 +124,6 @@ return {
       })
       return event
     end,
-
   },
   responses = {},
   notifications = {},

@@ -1,5 +1,7 @@
 --- @class ServerData
 --- @field buffers table<string, number> A table of buffers that are active on the server. The key is the buffer's file name and the value is the buffer number.
+--- @field windows table<string, number> A table of windows that are actively display information on the server. The key is the window's title(name) and the value is the window number.
+--- @field client_buffers table<string, string> A table of buffers that the clients are currently editing. The key is the client identifier and the value is the buffer's file name.
 
 --- @class Server
 --- @field host string Host the server is running on.

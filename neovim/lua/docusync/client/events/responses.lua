@@ -84,6 +84,30 @@ return {
           -- WIP: This is a good start, but needs to be improved
           vim.cmd("filetype detect")
 
+          -- Setup autocmd for attaching and detaching to the buffer to send events to the server
+          local cmd_attach = vim.api.nvim_create_autocmd("BufEnter", {
+            group = vim.api.nvim_create_augroup("DocuSyncClientBufEnter_" .. bufname, { clear = true }),
+            buffer = bufnr,
+            desc = "Send the document/open event to the server when a document is opened.",
+            callback = function()
+              local event = require("docusync.client.events.constructor").events.document_open(client.server_details.identifier, bufname)
+              client.tcp:write(event, function(write_err) assert(not write_err, write_err) end)
+            end
+          })
+
+          vim.api.nvim_create_autocmd("BufLeave", {
+            group = vim.api.nvim_create_augroup("DocuSyncClientBufLeave_" .. bufname, { clear = true }),
+            buffer = bufnr,
+            desc = "Send the document/leave event to the server when a document is closed.",
+            once = true,
+            callback = function()
+              vim.api.nvim_del_autocmd(cmd_attach)
+
+              local event = require("docusync.client.events.constructor").events.document_close(client.server_details.identifier, bufname)
+              client.tcp:write(event, function(write_err) assert(not write_err, write_err) end)
+            end
+          })
+
           -- Spin up the on_attach function for the buffer
           vim.api.nvim_buf_attach(bufnr, false, {
             on_bytes = function(_, _bufnr)
