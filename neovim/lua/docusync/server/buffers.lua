@@ -39,10 +39,9 @@ function M.listen(server)
           connection:write(notification, function(err) assert(not err, err) end)
         else
           -- Update the connected clients window
+          server.connections[connection] = nil
           require("docusync.server.menu.edit").connected_clients(server)
           require("docusync.server.menu.edit").client_buffers(server)
-
-          server.connections[connection] = nil
         end
       end
     end
@@ -77,10 +76,9 @@ function M.listen(server)
           connection:write(notification, function(err) assert(not err, err) end)
         else
           -- Update the connected clients window
+          server.connections[connection] = nil
           require("docusync.server.menu.edit").connected_clients(server)
           require("docusync.server.menu.edit").client_buffers(server)
-
-          server.connections[connection] = nil
         end
       end
     end
@@ -120,10 +118,9 @@ function M.listen(server)
               connection:write(sync_event, function(err) assert(not err, err) end)
             else
               -- Update the connected clients window
+              server.connections[connection] = nil
               require("docusync.server.menu.edit").connected_clients(server)
               require("docusync.server.menu.edit").client_buffers(server)
-
-              server.connections[connection] = nil
             end
           end
         end,

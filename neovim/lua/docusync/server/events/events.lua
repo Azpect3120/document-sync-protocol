@@ -62,10 +62,9 @@ return {
             connection:write(notification, function(write_err) assert(not write_err, write_err) end)
           else
             -- Update the connected clients window
+            server.connections[connection] = nil
             require("docusync.server.menu.edit").connected_clients(server)
             require("docusync.server.menu.edit").client_buffers(server)
-
-            server.connections[connection] = nil
           end
         end
       end
@@ -95,10 +94,9 @@ return {
           connection:write(notification, function(write_err) assert(not write_err, write_err) end)
         else
           -- Update the connected clients window
+          server.connections[connection] = nil
           require("docusync.server.menu.edit").connected_clients(server)
           require("docusync.server.menu.edit").client_buffers(server)
-
-          server.connections[connection] = nil
         end
       end
     end
@@ -136,10 +134,9 @@ return {
         connection:write(notification, function(write_err) assert(not write_err, write_err) end)
       else
         -- Update the connected clients window
+        server.connections[connection] = nil
         require("docusync.server.menu.edit").connected_clients(server)
         require("docusync.server.menu.edit").client_buffers(server)
-
-        server.connections[connection] = nil
       end
     end
 
@@ -269,6 +266,7 @@ return {
     -- Update menu windows
     require("docusync.server.menu.edit").client_buffers(server)
   end,
+
   --- The `document/update` event is emitted by the client whenever a client updates the document.
   --- The exact action that is required before emitting this event can vary depending on the client implementation.
   --- But the client should send the entire document content to the server when emitting this event. The server will
@@ -334,10 +332,9 @@ return {
           end
         else
           -- Update the connected clients window
+          server.connections[connection] = nil
           require("docusync.server.menu.edit").connected_clients(server)
           require("docusync.server.menu.edit").client_buffers(server)
-
-          server.connections[connection] = nil
         end
       end
     end)

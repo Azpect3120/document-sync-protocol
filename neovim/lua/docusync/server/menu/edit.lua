@@ -12,7 +12,9 @@ return {
     end
 
     local bufnr = vim.api.nvim_win_get_buf(server.data.windows["connected_clients"])
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, clients)
+    vim.schedule(function()
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, clients)
+    end)
   end,
 
   --- Update the list of buffers being edited by the clients window.
@@ -31,6 +33,8 @@ return {
     end
 
     local bufnr = vim.api.nvim_win_get_buf(server.data.windows["client_buffers"])
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    vim.schedule(function()
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+    end)
   end,
 }
