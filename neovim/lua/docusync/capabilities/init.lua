@@ -11,14 +11,14 @@ local M = {}
 
 --- Default server capabilities
 --- @return Capabilities
-function M.default ()
-    return {
-        document_sync = true,
-        compression = "",
-        identifiers = true,
-        cursor_sync = 1000,
-        client_count = true,
-    }
+function M.default()
+  return {
+    document_sync = true,
+    compression = "",
+    identifiers = true,
+    cursor_sync = 1000,
+    client_count = true,
+  }
 end
 
 --- Create a new Capabilities object
@@ -29,13 +29,13 @@ end
 --- @param client_count boolean Should the server send the client count to the clients.
 --- @return Capabilities
 function M.new(document_sync, compression, identifiers, cursor_sync, client_count)
-    return {
-        document_sync = document_sync,
-        compression = compression,
-        identifiers = identifiers,
-        cursor_sync = cursor_sync,
-        client_count = client_count,
-    }
+  return {
+    document_sync = document_sync,
+    compression = compression,
+    identifiers = identifiers,
+    cursor_sync = cursor_sync,
+    client_count = client_count,
+  }
 end
 
 -- Return module
