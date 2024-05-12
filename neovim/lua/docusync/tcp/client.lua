@@ -22,6 +22,11 @@ function M.connect(client)
     -- Check for errors
     assert(not err, err)
 
+    -- Start the client buffer listener
+    vim.schedule(function()
+      require("docusync.client.buffers").listen(client)
+    end)
+
     -- Construct and send a server/connect event
     vim.schedule(function()
       -- Construct event

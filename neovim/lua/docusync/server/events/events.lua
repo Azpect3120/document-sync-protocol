@@ -193,7 +193,7 @@ return {
         {}
       )
 
-      -- Send errored response to the client
+      -- Send error response to the client
       client:write(response, function(write_err)
         if write_err then error("Error writing response to client: " .. write_err) end
       end)

@@ -13,7 +13,7 @@ function M.listen(server)
     group = vim.api.nvim_create_augroup("DocuSyncBufferListener_add", { clear = true }),
     pattern = "*",
     callback = function(event)
-      -- Add buffer to the server data
+      -- Get the buffer name and buffer number
       local bufnr = event.buf
       local cwd = vim.loop.cwd()
       local bufname_long = vim.api.nvim_buf_get_name(bufnr)
