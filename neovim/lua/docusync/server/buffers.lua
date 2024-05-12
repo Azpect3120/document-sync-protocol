@@ -40,7 +40,6 @@ function M.listen(server)
         else
           -- Update the connected clients window
           require("docusync.server.menu.edit").connected_clients(server)
-          require("docusync.server.menu.edit").client_buffers(server)
 
           server.connections[connection] = nil
         end
@@ -78,7 +77,6 @@ function M.listen(server)
         else
           -- Update the connected clients window
           require("docusync.server.menu.edit").connected_clients(server)
-          require("docusync.server.menu.edit").client_buffers(server)
 
           server.connections[connection] = nil
         end
@@ -121,7 +119,6 @@ function M.listen(server)
             else
               -- Update the connected clients window
               require("docusync.server.menu.edit").connected_clients(server)
-              require("docusync.server.menu.edit").client_buffers(server)
 
               server.connections[connection] = nil
             end

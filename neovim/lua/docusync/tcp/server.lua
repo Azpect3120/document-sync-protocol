@@ -28,7 +28,6 @@ function M.start_server(server)
 
   -- Start the connected clients window
   require("docusync.server.menu").spawn.connected_clients(server)
-  require("docusync.server.menu").spawn.client_buffers(server)
 
   -- Listen for connections
   server.tcp:listen(128, function(err)
@@ -77,7 +76,6 @@ function M.stop_server(server)
     else
       -- Update the connected clients window
       require("docusync.server.menu.edit").connected_clients(server)
-      require("docusync.server.menu.edit").client_buffers(server)
 
       server.connections[connection] = nil
     end

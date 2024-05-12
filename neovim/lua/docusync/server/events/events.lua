@@ -63,7 +63,6 @@ return {
           else
             -- Update the connected clients window
             require("docusync.server.menu.edit").connected_clients(server)
-            require("docusync.server.menu.edit").client_buffers(server)
 
             server.connections[connection] = nil
           end
@@ -96,7 +95,6 @@ return {
         else
           -- Update the connected clients window
           require("docusync.server.menu.edit").connected_clients(server)
-          require("docusync.server.menu.edit").client_buffers(server)
 
           server.connections[connection] = nil
         end
@@ -105,7 +103,6 @@ return {
 
     -- Update the connected clients window
     require("docusync.server.menu.edit").connected_clients(server)
-    require("docusync.server.menu.edit").client_buffers(server)
 
     -- Print success message on server
     print(event.identifier .. " has connected to the server!")
@@ -137,7 +134,6 @@ return {
       else
         -- Update the connected clients window
         require("docusync.server.menu.edit").connected_clients(server)
-        require("docusync.server.menu.edit").client_buffers(server)
 
         server.connections[connection] = nil
       end
@@ -145,7 +141,6 @@ return {
 
     -- Update the connected clients window
     require("docusync.server.menu.edit").connected_clients(server)
-    require("docusync.server.menu.edit").client_buffers(server)
 
     -- Print success message on server
     print(event.identifier .. " has disconnected from the server!")
@@ -209,7 +204,7 @@ return {
     server.data.client_buffers[event.identifier] = event.document
 
     -- Update menu windows
-    require("docusync.server.menu.edit").client_buffers(server)
+    require("docusync.server.menu.edit").connected_clients(server)
 
     -- Get the content of the document
     local bufs = vim.api.nvim_list_bufs()
@@ -267,7 +262,7 @@ return {
     server.data.client_buffers[event.identifier] = ""
 
     -- Update menu windows
-    require("docusync.server.menu.edit").client_buffers(server)
+    require("docusync.server.menu.edit").connected_clients(server)
   end,
   --- The `document/update` event is emitted by the client whenever a client updates the document.
   --- The exact action that is required before emitting this event can vary depending on the client implementation.
@@ -335,7 +330,6 @@ return {
         else
           -- Update the connected clients window
           require("docusync.server.menu.edit").connected_clients(server)
-          require("docusync.server.menu.edit").client_buffers(server)
 
           server.connections[connection] = nil
         end
