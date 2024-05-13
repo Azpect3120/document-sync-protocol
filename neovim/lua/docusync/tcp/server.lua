@@ -62,6 +62,18 @@ function M.start_server(server)
     end)
   end)
 
+  -- Create auto-command for server end when vim is exited
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    callback = function()
+      local event = require("docusync.server.events.constructor").events.server_stop(server.host, server.port)
+      for _, connection in pairs(server.connections) do
+        if connection:is_active() then
+          connection:write(event, function(err) assert(not err, err) end)
+        end
+      end
+    end,
+  })
+
   -- Print the server has been started
   print("Server has been started on " .. server.host .. ":" .. server.port)
 end
