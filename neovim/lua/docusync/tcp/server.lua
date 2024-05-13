@@ -10,9 +10,6 @@ local M = {}
 --- @param server Server The server object to start.
 --- @return nil
 function M.start_server(server)
-  -- Nil check on the tcp object
-  assert(server.tcp == nil, "Server is already running, Stop first.")
-
   -- Ensure capabilities exist
   server.capabilities = server.capabilities or require("docusync.capabilities").default()
 
@@ -20,8 +17,10 @@ function M.start_server(server)
   server.tcp = uv.new_tcp()
 
   -- Bind the server to the host:port and handle error
-  local success, error = server.tcp:bind(server.host, server.port)
-  assert(success, error)
+  local success, bind_error = server.tcp:bind(server.host, server.port)
+  if not success and bind_error then
+    error(bind_error)
+  end
 
   -- Start the listener that will handler the buffers in the server
   require("docusync.server.buffers").listen(server)
@@ -32,20 +31,29 @@ function M.start_server(server)
   -- Listen for connections
   server.tcp:listen(128, function(err)
     -- Check for errors
-    assert(not err, err)
+    if err then
+      server.tcp = nil
+      error(err)
+    end
 
     -- Accept client connections
     local client = uv.new_tcp()
     server.tcp:accept(client)
-    assert(client, "Failed to accept client connection")
+
+    -- Error/nil check on the connected client
+    if not client then
+      print("Failed to accept client connection")
+    end
 
     -- Print the successful connection from a client
-    print("Accepted connection(TCP) from " .. client:getpeername().ip .. ":" .. client:getpeername().port)
+    -- print("Accepted connection(TCP) from " .. client:getpeername().ip .. ":" .. client:getpeername().port)
 
     -- Read incoming data from the client
     tcp_util.connection_read_loop(client, function(read_err, chunk)
       -- Check for errors
-      assert(not read_err, read_err)
+      if read_err then
+        print("Error reading data from client: " .. read_err)
+      end
 
       -- Parse the event/notification
       vim.schedule(function()

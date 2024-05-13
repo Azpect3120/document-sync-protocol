@@ -15,12 +15,17 @@ function M.connect(client)
   client.tcp = uv.new_tcp()
 
   -- Nil check on the tcp object
-  assert(client.tcp, "Error creating TCP object")
+  if client.tcp == nil then
+    error("Error creating TCP object")
+  end
 
   -- Attempt to connect
   client.tcp:connect(client.host, client.port, function(err)
     -- Check for errors
-    assert(not err, err)
+    if err then
+      client.tcp = nil
+      error(err)
+    end
 
     -- Start the client buffer listener
     vim.schedule(function()
@@ -66,7 +71,9 @@ end
 --- @return nil
 function M.disconnect(client)
   -- Ensure the client has a tcp object
-  assert(client.tcp, "Client is not connected to a server, cannot disconnect.")
+  if client.tcp == nil then
+    return print("Client is not connected to a server, cannot disconnect.")
+  end
 
   -- Close, shutdown and reset the connection
   -- Schedule is used to ensure the connection is killed at a valid time point in the event loop
@@ -80,9 +87,7 @@ function M.disconnect(client)
 
     -- Send event to server
     if client.tcp:is_active() then
-      client.tcp:write(event, function(write_err)
-        assert(not write_err, write_err)
-      end)
+      client.tcp:write(event, function(write_err) assert(not write_err, write_err) end)
     else
       error("Failed to send event to server, connection is not active.")
     end

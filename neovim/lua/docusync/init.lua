@@ -10,9 +10,30 @@ local capabilities = require("docusync.capabilities")
 ---@field server Server
 local M = {
   -- Default client values
-  client = { host = "127.0.0.1", port = 3270, tcp = nil, server_details = { identifier = "", password = "", capabilities = nil, buffers = {} } },
+  client = {
+    host = "127.0.0.1",
+    port = 3270,
+    tcp = nil,
+    server_details = {
+      identifier = "",
+      password = "",
+      capabilities = nil,
+      buffers = {},
+    },
+  },
   -- Default server values
-  server = { host = "127.0.0.1", port = 3270, tcp = nil, capabilities = capabilities.default(), connections = {}, data = {buffers = {}, windows = {}, client_buffers = {}} }
+  server = {
+    host = "127.0.0.1",
+    port = 3270,
+    tcp = nil,
+    capabilities = capabilities.default(),
+    connections = {},
+    data = {
+      buffers = {},
+      windows = {},
+      client_buffers = {},
+    },
+  }
 }
 
 function M.test_suite()
@@ -116,8 +137,12 @@ function M.connect(host, port)
   M.client.host = host or M.client.host
   M.client.port = port or M.client.port
 
-  -- Nil check on the tcp object
-  assert(M.client.tcp == nil, "Already connected to a server, Disconnect first.")
+  -- Nil check on the data objects
+  if M.client.tcp ~= nil then
+    return print("Already connected to host: " .. M.client.host .. ": " .. M.client.port .. ". Cannot connect to another server.")
+  elseif M.server.tcp ~= nil then
+    return print("Server is running, cannot connect to a server.")
+  end
 
   -- Connect to the server
   tcp.client.connect(M.client)
@@ -126,8 +151,10 @@ end
 --- Disconnect from a tcp server and remove the connection from the client object.
 --- @return nil
 function M.disconnect()
-  -- Ensure the client has a tcp object
-  assert(M.client.tcp, "Client is not connected to a server, cannot disconnect.")
+  -- Nil check on the client data object
+  if M.client.tcp == nil then
+    return print("Not connected to a server. Cannot disconnect.")
+  end
 
   -- Disconnect from the server
   tcp.client.disconnect(M.client)
@@ -142,8 +169,12 @@ function M.start_server(host, port)
   M.server.host = host or M.server.host
   M.server.port = port or M.server.port
 
-  -- Nil check on the tcp object
-  assert(M.server.tcp == nil, "Server is already running, Stop the server first.")
+  -- Nil check on the data objects
+  if M.server.tcp ~= nil then
+    return print("Server is already running. Cannot start another server.")
+  elseif M.client.tcp ~= nil then
+    return print("Connected to host: " .. M.client.host .. ": " .. M.client.port .. ". Cannot start a server while connected to a server.")
+  end
 
   -- TODO: Implement the server capabilities
   M.server.capabilities = capabilities.default() -- or capabilities.new(...)
@@ -155,8 +186,10 @@ end
 --- Stop a tcp server and remove the connection from the server object.
 --- @return nil
 function M.stop_server()
-  -- Ensure the server has a tcp object
-  assert(M.server.tcp, "Server is not running, cannot stop the server.")
+  -- Nil check on the tcp object
+  if M.server.tcp == nil then
+    return print("Server is not running, cannot stop the server.")
+  end
 
   -- Stop the server
   tcp.server.stop_server(M.server)
@@ -168,16 +201,18 @@ end
 --- telescope picker to display the list.
 --- @return nil
 function M.document_list()
-  -- Ensure the client is connected to a server
-  assert(M.client.tcp, "Client is not connected to a server, cannot get document list.")
+  -- Ensure the client is connected to a server and isn't running a server
+  if M.client.tcp == nil then
+    return print("Not connected to a server. Cannot get the list of open documents.")
+  elseif M.server.tcp ~= nil then
+    return print("Server is running, cannot get the list of open documents.")
+  end
 
   -- Create the event to get the list of open documents
   local event = require("docusync.client.events.constructor").events.document_list(M.client.server_details.identifier)
 
   -- Send the event to the server
-  M.client.tcp:write(event, function(err)
-    assert(not err, err)
-  end)
+  M.client.tcp:write(event, function(err) assert(not err, err) end)
 end
 
 return M
