@@ -63,7 +63,9 @@ function M.start_server(server)
   end)
 
   -- Create auto-command for server end when vim is exited
-  vim.api.nvim_create_autocmd("VimLeavePre", {
+  vim.api.nvim_create_autocmd({"VimLeavePre", "QuitPre"}, {
+    once = true,
+    pattern = "*",
     callback = function()
       local event = require("docusync.server.events.constructor").events.server_stop(server.host, server.port)
       for _, connection in pairs(server.connections) do

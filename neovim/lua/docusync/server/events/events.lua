@@ -294,15 +294,90 @@ return {
       -- Get the current content of the server's version of the document
       local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 
+      -- Namespace for the virtual text
+      local ns = vim.api.nvim_create_namespace("DocuSync_VirtualText")
+
       -- Diff the content of the document and update it on the server
       for i, line in ipairs(event.content) do
         if lines[i] ~= line then
           vim.schedule(function()
+            -- Update line content
             vim.api.nvim_buf_set_lines(bufnr, i - 1, i, false, { line })
+
+            -- Update virtual text
+            vim.api.nvim_buf_set_extmark(
+              bufnr,
+              ns,
+              i - 1,
+              0,
+              {
+                id = i - 1,
+                virt_text = { { event.identifier, "Comment" } },
+                virt_text_pos = "eol",
+                sign_text = " !",
+                sign_hl_group = "CursorLineSign",
+              }
+            )
+
+            -- Remove the text after three seconds
+            vim.loop.new_timer():start(3000, 0, vim.schedule_wrap(function()
+              vim.api.nvim_buf_set_extmark(
+                bufnr,
+                ns,
+                i - 1,
+                0,
+                {
+                  id = i - 1,
+                  virt_text = { { "", "Comment" } },
+                  virt_text_pos = "eol",
+                  sign_text = " !",
+                  sign_hl_group = "CursorLineSign",
+                }
+              )
+            end))
           end)
         elseif lines[i] == nil then
           vim.schedule(function()
+            -- Update line content
             vim.api.nvim_buf_set_lines(bufnr, i - 1, i, false, { "" })
+
+            print(bufnr, vim.api.nvim_get_current_buf())
+            print("Line number: ", i - 1)
+            print(event.identifier)
+
+            -- Update virtual text
+            vim.api.nvim_buf_set_extmark(
+              bufnr,
+              ns,
+              i - 1,
+              0,
+              {
+                id = i - 1,
+                virt_text = {
+                  { event.identifier, "Comment" },
+                },
+                virt_text_pos = "eol",
+                sign_text = " !",
+                sign_hl_group = "CursorLineSign",
+              }
+            )
+
+            -- Remove the text after three seconds
+            vim.loop.new_timer():start(3000, 0, vim.schedule_wrap(function()
+              vim.api.nvim_buf_set_extmark(
+                bufnr,
+                ns,
+                i - 1,
+                0,
+                {
+                  id = i - 1,
+                  virt_text = { { "", "Comment" } },
+                  virt_text_pos = "eol",
+                  sign_text = " !",
+                  sign_hl_group = "CursorLineSign",
+                }
+              )
+            end))
           end)
         end
       end

@@ -65,8 +65,9 @@ function M.connect(client)
   end)
 
   -- Create auto-command for client end when vim is exited
-  vim.api.nvim_create_autocmd("VimLeavePre", {
+  vim.api.nvim_create_autocmd({"VimLeavePre", "QuitPre"}, {
     once = true,
+    pattern = "*",
     callback = function()
       local event = require("docusync.client.events.constructor").events.server_disconnect(client.host, client.port, client.server_details.identifier)
       client.tcp:write(event, function(err) assert(not err, err) end)
