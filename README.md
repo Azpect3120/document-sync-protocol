@@ -26,3 +26,7 @@ Credit to [Ethan Heimer](https://github.com/ethan-heimer) for helping me develop
 ## Known Issues
 The TCP connection seems to be rate limited which means the server/client cannot send big files because the line data
 overflow the TCP limit. I THINK?!
+
+## Ideas
+- Might be best to use the `TextChanged` event instead of the on_bytes events...
+

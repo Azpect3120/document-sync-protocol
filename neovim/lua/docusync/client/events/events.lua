@@ -56,23 +56,54 @@ return {
 
     -- Schedule the update to happen in the next safe tick
     vim.schedule(function()
-      -- Update the clients buffer with the new content: diff
+      -- update the clients buffer with the new content: diff
       local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+      -- namespace for the virtual text
+      local ns = vim.api.nvim_create_namespace("docusync_virtualtext")
 
       for i, line in ipairs(event.content) do
         if lines[i] ~= line then
           vim.schedule(function()
+            -- update line content
             vim.api.nvim_buf_set_lines(bufnr, i - 1, i, false, { line })
+
+            -- update virtual text
+            vim.api.nvim_buf_set_extmark(
+              bufnr,
+              ns,
+              i - 1,
+              0,
+              {
+                id = i - 1,
+                sign_text = " !",
+                sign_hl_group = "cursorlinesign",
+              }
+            )
           end)
         elseif lines[i] == nil then
           vim.schedule(function()
-            vim.api.nvim_buf_set_lines(bufnr, i - 1, i, false, { "" })
+            -- update line content
+            vim.api.nvim_buf_set_lines(bufnr, i - 1, i, false, { line })
+
+            -- update virtual text
+            vim.api.nvim_buf_set_extmark(
+              bufnr,
+              ns,
+              i - 1,
+              0,
+              {
+                id = i - 1,
+                sign_text = " !",
+                sign_hl_group = "cursorlinesign",
+              }
+            )
           end)
         end
       end
 
-      -- If lines were removed, clear them from the end of the file
-      -- BRILLIANT FIX RIGHT HERE
+      -- if lines were removed, clear them from the end of the file
+      -- brilliant fix right here
       if #event.content < #lines then
         vim.schedule(function()
           vim.api.nvim_buf_set_lines(bufnr, #event.content, -1, false, {})

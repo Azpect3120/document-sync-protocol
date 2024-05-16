@@ -321,19 +321,21 @@ return {
 
             -- Remove the text after three seconds
             vim.loop.new_timer():start(3000, 0, vim.schedule_wrap(function()
-              vim.api.nvim_buf_set_extmark(
-                bufnr,
-                ns,
-                i - 1,
-                0,
-                {
-                  id = i - 1,
-                  virt_text = { { "", "Comment" } },
-                  virt_text_pos = "eol",
-                  sign_text = " !",
-                  sign_hl_group = "CursorLineSign",
-                }
-              )
+              if (i - 1) < vim.api.nvim_buf_line_count(bufnr) then
+                vim.api.nvim_buf_set_extmark(
+                  bufnr,
+                  ns,
+                  i - 1,
+                  0,
+                  {
+                    id = i - 1,
+                    virt_text = { { "", "Comment" } },
+                    virt_text_pos = "eol",
+                    sign_text = " !",
+                    sign_hl_group = "CursorLineSign",
+                  }
+                )
+              end
             end))
           end)
         elseif lines[i] == nil then
@@ -364,19 +366,21 @@ return {
 
             -- Remove the text after three seconds
             vim.loop.new_timer():start(3000, 0, vim.schedule_wrap(function()
-              vim.api.nvim_buf_set_extmark(
-                bufnr,
-                ns,
-                i - 1,
-                0,
-                {
-                  id = i - 1,
-                  virt_text = { { "", "Comment" } },
-                  virt_text_pos = "eol",
-                  sign_text = " !",
-                  sign_hl_group = "CursorLineSign",
-                }
-              )
+              if (i - 1) < vim.api.nvim_buf_line_count(bufnr) then
+                vim.api.nvim_buf_set_extmark(
+                  bufnr,
+                  ns,
+                  i - 1,
+                  0,
+                  {
+                    id = i - 1,
+                    virt_text = { { "", "Comment" } },
+                    virt_text_pos = "eol",
+                    sign_text = " !",
+                    sign_hl_group = "CursorLineSign",
+                  }
+                )
+              end
             end))
           end)
         end
